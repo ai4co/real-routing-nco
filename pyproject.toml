@@ -1,0 +1,84 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rrnco"
+version = "0.1.0"
+description = "Real Routing NCO"
+authors = [{ name = "Jiwoo Son", email = ""},
+            { name = "Zhikai Zhao", email = ""},
+            { name = "Federico Berto", email = ""},
+             {name = "Chuanbo Hua", email = "" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = "MIT"
+dependencies = [
+    "rl4co>=0.5.1",
+    "polyline",
+    "geopy",
+    "folium",
+    "scikit-learn",
+    "matplotlib",
+    "pandas",
+]
+
+[project.optional-dependencies]
+dev = ["black", "pre-commit", "ruff"]
+solver = [
+    "pyvrp>=0.9.1,<0.10",
+    "ortools>=9.10.4067,<10",
+]
+
+[tool.ruff]
+select = ["F", "E", "W", "I001"]
+line-length = 90
+show-fixes = false
+target-version = "py311"
+task-tags = ["TODO", "FIXME"]
+ignore = ["E501"] # never enforce `E501` (line length violations), done in Black
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+
+[tool.ruff.isort]
+known-first-party = []
+known-third-party = []
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+combine-as-imports = true
+split-on-trailing-comma = false
+lines-between-types = 1
+
+[tool.black]
+line-length = 90
+target-version = ["py311"]
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.direnv
+    | \.eggs
+    | \.git
+    | \.tox
+    | \.venv
+    | _build
+    | build
+    | dist
+    | venv
+  )/
+)
+'''
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    # Lines to exclude from coverage report (e.g., comments, debug statements)
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]

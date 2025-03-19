@@ -1,0 +1,10 @@
+_target_: rrnco.baselines.MatNet.model.MatNet
+
+# During val/test only we apply dihedral transformations
+num_augment: 8
+# feats: ["locs", "demand"]
+metrics:
+  train: ["loss", "reward", "max_reward"]
+  val: ["no_aug_reward", "no_aug_max_reward", "reward", "max_reward", "max_aug_reward"]
+  test: ${model.metrics.val}
+  log_on_step: True

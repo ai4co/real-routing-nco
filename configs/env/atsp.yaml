@@ -1,0 +1,20 @@
+_target_: rrnco.envs.atsp.ATSPEnv
+name: atsp
+
+generator_params:
+  num_loc: 100 # training graph_size
+  tmat_class: False
+  data_path: ${paths.root_dir}/data/dataset
+  file_name: splited_cities_list
+data_dir: ${paths.root_dir}/data/${env.name}
+
+# Note that validation is not used for guiding training and this is already the test set
+# so we can directly check the progress here!
+# val_file: [
+#   "atsp100_val_seed1234.npz"
+# ]
+val_file: [
+  atsp_n100_seed3333_out_of_distribution.npz
+]
+val_dataloader_names: ["val"]
+test_file: ${env.val_file}
