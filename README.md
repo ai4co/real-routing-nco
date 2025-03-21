@@ -1,10 +1,16 @@
 # Real Routing NCO
 
-### ❗ Problem
+[![arXiv](https://img.shields.io/badge/arXiv-2503.16159-b31b1b.svg)](https://arxiv.org/abs/2503.16159) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT)
+
+> Note: we are currently finalizing the repository. Stay tuned!
+
+
+### 🗺️ Problem
 Most NCO methods use simplified routing with 2D Euclidean distance. This is not realistic for real-world applications which can have complex 1) _distance matrices_ and 2) _duration matrices_ between locations because of road networks, traffic, and more.
 
 <p align="center">
-  <img src="assets/simple_routing.png" width="150" /><img src="assets/real_routing.png" width="150" />
+  <img src="assets/simple_routing.png" width="300" /><img src="assets/real_routing.png" width="300" />
 <br>
   <em>Left: previous works with simplified routing. Right: RRNCO with real-world routing!</em>
   <br>
