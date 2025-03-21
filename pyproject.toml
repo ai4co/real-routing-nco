@@ -6,10 +6,10 @@ build-backend = "hatchling.build"
 name = "rrnco"
 version = "0.1.0"
 description = "Real Routing NCO"
-authors = [{ name = "Jiwoo Son", email = ""},
-            { name = "Zhikai Zhao", email = ""},
-            { name = "Federico Berto", email = ""},
-             {name = "Chuanbo Hua", email = "" }]
+authors = [{ name = "Jiwoo Son", email = "jiwoo.son@omelet.ai"},
+            { name = "Zhikai Zhao", email = "zzk020202@kaist.ac.kr"},
+            { name = "Federico Berto", email = "berto.federico2@gmail.com"},
+             {name = "Chuanbo Hua", email = "cbhua@kaist.ac.kr" }]
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
