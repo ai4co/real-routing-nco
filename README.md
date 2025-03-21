@@ -1,6 +1,6 @@
 # Real Routing NCO
 
-[![arXiv](https://img.shields.io/badge/arXiv-2503.16159-b31b1b.svg)](https://arxiv.org/abs/2503.16159) 
+[![arXiv](https://img.shields.io/badge/arXiv-2503.16159-b31b1b.svg)](https://arxiv.org/abs/2503.16159)
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT)
 
 > Note: we are currently finalizing the repository. Stay tuned!
@@ -91,13 +91,17 @@ Instructions on how to install the OSRM backend and generate (new) datasets [dat
 TODO
 
 
-### Citation
+### 🤩 Citation
+If you find RRNCO valuable for your research or applied projects:
 
-TODO
-
-
----
-
----
-
----
+```bibtex
+@article{son2025rrnco_neuralcombinatorialoptimizationrealworldrouting,
+      title={{Neural Combinatorial Optimization for Real-World Routing}},
+      author={Jiwoo Son and Zhikai Zhao and Federico Berto and Chuanbo Hua and Changhyun Kwon and Jinkyoo Park},
+      year={2025},
+      eprint={2503.16159},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://github.com/ai4co/real-routing-nco},
+}
+```
