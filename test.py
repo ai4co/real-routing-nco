@@ -4,7 +4,6 @@ import time
 import warnings
 
 import torch
-
 from rl4co.data.dataset import TensorDictDataset
 from rl4co.data.utils import load_npz_to_tensordict
 from rl4co.utils.ops import batchify, unbatchify
@@ -68,12 +67,13 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", type=str, default=None)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--no_aug", action="store_true", help="Disable data augmentation")
+    parser.add_argument("--problem_size", type=int, default=100)
     # Use load_from_checkpoint with map_location, which is handled internally by Lightning
     # Suppress FutureWarnings related to torch.load and weights_only
     warnings.filterwarnings("ignore", message=".*weights_only.*", category=FutureWarning)
 
     opts = parser.parse_args()
-
+    generator_params = {"num_loc": opts.problem_size}
     batch_size = opts.batch_size
     decode_type = opts.decode_type
     checkpoint_path = opts.checkpoint
@@ -124,9 +124,9 @@ if __name__ == "__main__":
 
         match problem:
             case "atsp":
-                env = ATSPEnv(check_solution=False)
+                env = ATSPEnv(check_solution=False, generator_params=generator_params)
             case "rcvrptw":
-                env = RMTVRPEnv(check_solution=False)
+                env = RMTVRPEnv(check_solution=False, generator_params=generator_params)
             case "rcvrp":
                 if "routefinder" in checkpoint_path:
                     td_test["demand_linehaul"] = td_test["demand"] / td_test[
@@ -136,13 +136,17 @@ if __name__ == "__main__":
                     td_test["locs"] = torch.cat(
                         [td_test["depot"][..., None, :], td_test["locs"]], dim=-2
                     )
-                    env = RMTVRPEnv(check_solution=False)
+                    env = RMTVRPEnv(
+                        check_solution=False, generator_params=generator_params
+                    )
                 else:
                     td_test["demand"] = td_test["demand"] / td_test["capacity"].unsqueeze(
                         -1
                     )
                     td_test["capacity"] = torch.ones_like(td_test["capacity"])
-                    env = RCVRPEnv(check_solution=False)
+                    env = RCVRPEnv(
+                        check_solution=False, generator_params=generator_params
+                    )
             case _:
                 raise ValueError(f"Problem {problem} not supported")
         dataloader = get_dataloader(td_test, batch_size=batch_size)
@@ -162,6 +166,7 @@ if __name__ == "__main__":
                         return_actions=True,
                         phase="val",
                         calc_reward=False,
+                        num_starts=n_start,
                     )
                     td_batch = batchify(
                         td_reset, n_start

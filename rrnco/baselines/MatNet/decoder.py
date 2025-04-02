@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Tuple, Union
 
 import torch.nn as nn
-
 from rl4co.envs import RL4COEnvBase
 from rl4co.models.nn.attention import PointerAttention, PointerAttnMoE
 from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding

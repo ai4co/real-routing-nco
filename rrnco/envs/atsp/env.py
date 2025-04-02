@@ -1,7 +1,6 @@
 from typing import Optional
 
 import torch
-
 from rl4co.envs.common.base import RL4COEnvBase
 from rl4co.envs.common.utils import batch_to_scalar
 from rl4co.utils.pylogger import get_pylogger
@@ -113,7 +112,6 @@ class ATSPEnv(RL4COEnvBase):
             "i": i,
             "action_mask": available,
         }
-
         # Add normalization metadata if applicable
         if self.normalize:
             td_reset_data.update(

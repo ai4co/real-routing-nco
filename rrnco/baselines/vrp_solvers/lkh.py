@@ -1,6 +1,5 @@
 import lkh
 import numpy as np
-
 from tensordict import TensorDict
 from torch import Tensor
 

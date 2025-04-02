@@ -1,14 +1,13 @@
 import math
-
 from dataclasses import dataclass, fields
 from typing import Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-
 from einops import rearrange
 from rl4co.envs import RL4COEnvBase
-from rl4co.models.common.constructive.autoregressive.decoder import AutoregressiveDecoder
+from rl4co.models.common.constructive.autoregressive.decoder import \
+    AutoregressiveDecoder
 from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding
 from rl4co.models.nn.mlp import MLP
 from rl4co.utils.ops import batchify, gather_by_index, unbatchify
@@ -169,7 +168,6 @@ class RRNetDecoder(AutoregressiveDecoder):
             # if num_starts > 0 and we have some dynamic embeddings, we need to reshape them to [B*S, ...]
             # since keys and values are not shared across starts (i.e. the episodes modify these embeddings at each step)
             cached = cached.batchify(num_starts=num_starts)
-
         elif num_starts > 1:
             td = unbatchify(td, num_starts)
 
@@ -178,6 +176,7 @@ class RRNetDecoder(AutoregressiveDecoder):
 
         # Compute logits
         mask = td["action_mask"]
+
         logits = self.pointer(glimpse_q, glimpse_k, glimpse_v, logit_k, mask)
 
         # Compute inductive bias
@@ -318,6 +317,7 @@ class RRNet_PointerAttention(nn.Module):
             )
         else:
             attn_mask = None
+
         heads = self.sdpa_fn(q, k, v, attn_mask=attn_mask)
         return rearrange(heads, "... h n g -> ... n (h g)", h=self.num_heads)
 

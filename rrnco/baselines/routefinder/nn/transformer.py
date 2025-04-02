@@ -3,7 +3,6 @@ from typing import Callable, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from rl4co.models.nn.attention import MultiHeadAttention
 from rl4co.models.nn.mlp import MLP
 from rl4co.models.nn.moe import MoE

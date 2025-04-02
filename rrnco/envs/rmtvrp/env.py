@@ -1,21 +1,16 @@
 import os
-
 from typing import List, Optional, Union
 
 import numpy as np
 import torch
-
 from rl4co.data.utils import load_npz_to_tensordict
 from rl4co.envs.common.base import RL4COEnvBase
 from rl4co.utils.ops import gather_by_index
 from rl4co.utils.pylogger import get_pylogger
 from tensordict.tensordict import TensorDict
-from torchrl.data import (
-    BoundedTensorSpec,
-    CompositeSpec,
-    UnboundedContinuousTensorSpec,
-    UnboundedDiscreteTensorSpec,
-)
+from torchrl.data import (BoundedTensorSpec, CompositeSpec,
+                          UnboundedContinuousTensorSpec,
+                          UnboundedDiscreteTensorSpec)
 
 from .generator import RMTVRPGenerator
 from .selectstartnodes import get_select_start_nodes_fn
@@ -135,7 +130,6 @@ class RMTVRPEnv(RL4COEnvBase):
         self._make_spec(self.generator)
 
     def _step(self, td: TensorDict) -> TensorDict:
-
         prev_node, curr_node = td["current_node"], td["action"]
         b_idx = torch.arange(td.batch_size[0])
         distance = td["distance_matrix"][b_idx, prev_node, curr_node]

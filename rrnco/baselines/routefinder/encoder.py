@@ -1,12 +1,13 @@
 from typing import Tuple, Union
 
 import torch.nn as nn
-
 from rl4co.utils.pylogger import get_pylogger
 from torch import Tensor
 
-from rrnco.baselines.routefinder.env_embeddings.mtvrp import MTVRPInitEmbeddingRouteFinder
-from rrnco.baselines.routefinder.nn.transformer import Normalization, TransformerBlock
+from rrnco.baselines.routefinder.env_embeddings.mtvrp import \
+    MTVRPInitEmbeddingRouteFinder
+from rrnco.baselines.routefinder.nn.transformer import (Normalization,
+                                                        TransformerBlock)
 
 log = get_pylogger(__name__)
 
@@ -62,7 +63,6 @@ class RouteFinderEncoder(nn.Module):
     def forward(
         self, td: Tensor, mask: Union[Tensor, None] = None
     ) -> Tuple[Tensor, Tensor]:
-
         # Transfer to embedding space
         init_h = self.init_embedding(td)  # [B, N, H]
 

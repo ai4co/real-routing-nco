@@ -1,5 +1,4 @@
 import torch
-
 from rl4co.utils.ops import gather_by_index
 
 from rrnco.envs.rmtvrp.sampler import Real_World_Sampler

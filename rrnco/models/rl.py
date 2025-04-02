@@ -1,7 +1,6 @@
 from typing import Any, Union
 
 import torch.nn as nn
-
 from rl4co.envs.common.base import RL4COEnvBase
 from rl4co.models.rl.reinforce.reinforce import REINFORCE
 from rl4co.utils.ops import gather_by_index, unbatchify
@@ -54,7 +53,6 @@ class RRNet(REINFORCE):
         no_aug_coords: bool = True,
         **kwargs,
     ):
-
         self.save_hyperparameters(logger=False)
 
         if policy is None:
@@ -91,7 +89,6 @@ class RRNet(REINFORCE):
     def shared_step(
         self, batch: Any, batch_idx: int, phase: str, dataloader_idx: int = None
     ):
-
         td = self.env.reset(batch)
         n_aug, n_start = self.num_augment, self.num_starts
         n_start = self.env.get_num_starts(td) if n_start is None else n_start

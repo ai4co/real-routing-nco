@@ -3,17 +3,16 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from rl4co.envs import RL4COEnvBase
 from rl4co.models.nn.attention import PointerAttention
-
 # from rl4co.models.nn.env_embeddings import env_context_embedding, env_dynamic_embedding
 from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding
 from rl4co.models.zoo.am.decoder import AttentionModelDecoder
 from rl4co.utils.pylogger import get_pylogger
 from torch.nn.functional import scaled_dot_product_attention
 
-from rrnco.baselines.routefinder.env_embeddings.mtvrp.context import MTVRPContextEmbedding
+from rrnco.baselines.routefinder.env_embeddings.mtvrp.context import \
+    MTVRPContextEmbedding
 
 from .moe import MoE
 

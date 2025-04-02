@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
-
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from tensordict import TensorDict
 from torch import Tensor

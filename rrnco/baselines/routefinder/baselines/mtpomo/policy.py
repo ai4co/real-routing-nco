@@ -3,9 +3,7 @@ from rl4co.models.zoo.am import AttentionModelPolicy
 from rl4co.utils.pylogger import get_pylogger
 
 from rrnco.baselines.routefinder.env_embeddings.mtvrp import (
-    MTVRPContextEmbedding,
-    MTVRPInitEmbedding,
-)
+    MTVRPContextEmbedding, MTVRPInitEmbedding)
 
 log = get_pylogger(__name__)
 
@@ -29,7 +27,6 @@ class MTPOMOPolicy(AttentionModelPolicy):
         context_embedding: MTVRPContextEmbedding = None,
         **kwargs,
     ):
-
         if init_embedding is None:
             init_embedding = MTVRPInitEmbedding(embed_dim=embed_dim)
         else:

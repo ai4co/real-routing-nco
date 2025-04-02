@@ -4,7 +4,6 @@ import hydra
 import lightning as L
 import pyrootutils
 import torch
-
 from lightning import Callback, LightningModule
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig

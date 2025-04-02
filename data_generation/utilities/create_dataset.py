@@ -1,21 +1,17 @@
 import argparse
 import json
 import os
-
 from typing import Dict, List, Tuple
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
-
 from shapely.geometry import Polygon
 
-from data_generation.utilities import (
-    generate_random_points,
-    get_city_data_with_cache,
-    save_points_to_csv,
-)
+from data_generation.utilities import (generate_random_points,
+                                       get_city_data_with_cache,
+                                       save_points_to_csv)
 
 SEED = 42
 
@@ -34,7 +30,6 @@ class PathManager:
         self._create_directory_structure()
 
     def _create_directory_structure(self):
-
         os.makedirs(self.data_dir, exist_ok=True)
         os.makedirs(self.data_generation_data, exist_ok=True)
         os.makedirs(os.path.join(self.data_generation_data, "city"), exist_ok=True)
@@ -82,7 +77,6 @@ class OSRMRouter:
     def get_table(
         self, points: List[Tuple[float, float]]
     ) -> Tuple[np.ndarray, np.ndarray]:
-
         coords = ";".join([f"{lon:.6f},{lat:.6f}" for lat, lon in points])
         url = f"{self.server_url}/table/v1/driving/{coords}"
         params = {"annotations": "distance,duration"}
@@ -145,9 +139,12 @@ def process_city_data(city_name: str, paths: PathManager) -> None:
         gpd.GeoSeries([area_of_interest], crs="EPSG:4326").to_crs(epsg=3857).iloc[0]
     )
 
-    filtered_roads, removed_roads, water_features, water_buffer = (
-        get_city_data_with_cache(city_name, paths.get_config_path())
-    )
+    (
+        filtered_roads,
+        removed_roads,
+        water_features,
+        water_buffer,
+    ) = get_city_data_with_cache(city_name, paths.get_config_path())
     gdf_points = generate_random_points(
         filtered_roads, area_of_interest_projected, n_points=1000, seed=SEED
     )

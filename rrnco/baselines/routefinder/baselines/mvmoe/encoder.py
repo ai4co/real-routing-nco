@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-
 from rl4co.envs import RL4COEnvBase
 from rl4co.models.nn.attention import MultiHeadAttention
 from rl4co.models.nn.graph.attnnet import GraphAttentionNetwork
@@ -9,7 +8,8 @@ from rl4co.models.zoo.am.encoder import AttentionModelEncoder
 from rl4co.utils.pylogger import get_pylogger
 from torch import Tensor
 
-from rrnco.baselines.routefinder.env_embeddings.mtvrp.init import MTVRPInitEmbedding
+from rrnco.baselines.routefinder.env_embeddings.mtvrp.init import \
+    MTVRPInitEmbedding
 
 from .moe import MoE
 

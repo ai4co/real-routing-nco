@@ -4,9 +4,7 @@ from rl4co.utils.pylogger import get_pylogger
 
 from rrnco.baselines.routefinder.encoder import RouteFinderEncoder
 from rrnco.baselines.routefinder.env_embeddings.mtvrp import (
-    MTVRPContextEmbeddingRouteFinder,
-    MTVRPInitEmbeddingRouteFinder,
-)
+    MTVRPContextEmbeddingRouteFinder, MTVRPInitEmbeddingRouteFinder)
 
 log = get_pylogger(__name__)
 
@@ -35,7 +33,6 @@ class RouteFinderPolicy(AttentionModelPolicy):
         extra_encoder_kwargs: dict = {},
         **kwargs,
     ):
-
         encoder = RouteFinderEncoder(
             init_embedding=init_embedding,
             num_heads=num_heads,

@@ -1,12 +1,11 @@
 import abc
-
 from typing import Optional, Tuple
 
 import torch
 import torch.nn.functional as F
-
 from rl4co.envs import RL4COEnvBase
-from rl4co.utils.ops import batchify, gather_by_index, unbatchify, unbatchify_and_gather
+from rl4co.utils.ops import (batchify, gather_by_index, unbatchify,
+                             unbatchify_and_gather)
 from rl4co.utils.pylogger import get_pylogger
 from tensordict.tensordict import TensorDict
 
@@ -286,7 +285,6 @@ class DecodingStrategy(metaclass=abc.ABCMeta):
         selected = torch.multinomial(probs, 1).squeeze(1)
 
         if mask is not None:
-
             assert selected.min() >= 0, "selected contains negative indices"
             assert selected.max() < mask.size(1), "selected index out of range"
             assert not torch.isnan(mask).any().item()  # check mask for NaN

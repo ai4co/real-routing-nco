@@ -2,7 +2,6 @@ from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
-
 from rl4co.envs import RL4COEnvBase
 from rl4co.models.common.constructive import AutoregressiveEncoder
 from tensordict import TensorDict

@@ -1,12 +1,11 @@
 import abc
-
 from typing import Optional, Tuple
 
 import torch
 import torch.nn.functional as F
-
 from rl4co.envs import RL4COEnvBase
-from rl4co.utils.ops import batchify, gather_by_index, unbatchify, unbatchify_and_gather
+from rl4co.utils.ops import (batchify, gather_by_index, unbatchify,
+                             unbatchify_and_gather)
 from rl4co.utils.pylogger import get_pylogger
 from tensordict.tensordict import TensorDict
 

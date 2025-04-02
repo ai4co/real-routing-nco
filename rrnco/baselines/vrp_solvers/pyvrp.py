@@ -1,12 +1,13 @@
 import numpy as np
 import pyvrp as pyvrp
-
-from pyvrp import Client, Depot, ProblemData, VehicleType, solve as _solve
+from pyvrp import Client, Depot, ProblemData, VehicleType
+from pyvrp import solve as _solve
 from pyvrp.stop import MaxRuntime
 from tensordict.tensordict import TensorDict
 from torch import Tensor
 
-from .constants import PYVRP_MAX_VALUE as MAX_VALUE, PYVRP_SCALING_FACTOR
+from .constants import PYVRP_MAX_VALUE as MAX_VALUE
+from .constants import PYVRP_SCALING_FACTOR
 from .utils import scale
 
 

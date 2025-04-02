@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-
 from tensordict.tensordict import TensorDict
 
 
@@ -19,7 +18,6 @@ class ATSPInitEmbedding(nn.Module):
         self.embed_dim = embed_dim
 
     def forward(self, td: TensorDict):
-
         distance = td["distance_matrix"]
 
         b, r, c = distance.shape
