@@ -313,7 +313,6 @@ class RouteFinderSingleVariantSampling(RouteFinderBase):
 
         # variant subsampling: given a batch with *all* features, we subsample a part of them
         if phase == "train":
-
             # Sample single variant (i.e which features to *remove* with a certain probability)
             variant_probabilities = list(self.env.generator.variant_probs.values())
             indices = torch.bernoulli(torch.tensor(variant_probabilities))

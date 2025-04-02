@@ -69,7 +69,7 @@ def load_cities_list(data_dir, in_distribution):
         return cities_list["test"]
 
 
-def sample_data(data_dir, cities_list, dataset_size, graph_size, in_distribution):
+def sample_data(data_dir, cities_list, dataset_size, graph_size, dist_type="uniform"):
     """Sample data for a given cities list, dataset size and graph size."""
 
     num_cities = len(cities_list)
@@ -103,12 +103,17 @@ def sample_data(data_dir, cities_list, dataset_size, graph_size, in_distribution
             duration = data["duration"][new_indices][:, new_indices]
             data_length = len(points)
             data = {"points": points, "distance": distance, "duration": duration}
-        indices = np.array(
-            [
-                np.random.choice(data_length, graph_size, replace=False)
-                for _ in range(dataset_size_per_city)
-            ]
-        )
+        if dist_type == "uniform":
+            indices = np.array(
+                [
+                    np.random.choice(data_length, graph_size, replace=False)
+                    for _ in range(dataset_size_per_city)
+                ]
+            )
+        elif dist_type == "cluster":
+            indices = single_cluster_sample(
+                data["points"], dataset_size_per_city, data_length, graph_size
+            )
         for key, values in data.items():
             if key == "distance" or key == "duration":
                 if sampled_data.get(key, None) is None:
@@ -129,6 +134,20 @@ def sample_data(data_dir, cities_list, dataset_size, graph_size, in_distribution
                         [sampled_data[key], values[indices]], axis=0
                     )
     return sampled_data
+
+
+def single_cluster_sample(points, dataset_size_per_city, data_length, graph_size):
+    # dataset_size_per_city만큼 반복하면서 클러스터 샘플링 수행
+    indices = np.array(
+        [
+            # 각 반복마다 새로운 중심점을 선택하고 클러스터 샘플링
+            np.argsort(
+                np.linalg.norm(points - points[np.random.choice(data_length)], axis=1)
+            )[:graph_size]
+            for _ in range(dataset_size_per_city)
+        ]
+    )
+    return indices
 
 
 def normalize_points(points):
@@ -355,24 +374,30 @@ def generate_mtvrp_data(
 
 # Main Dataset Generation Functions
 def generate_env_data(
-    env_type, data_dir, dataset_size, graph_size, in_distribution, **kwargs
+    env_type,
+    data_dir,
+    dataset_size,
+    graph_size,
+    in_distribution,
+    dist_type="uniform",
+    **kwargs,
 ):
     """Generate data for a given environment type."""
     cities_list = load_cities_list(data_dir, in_distribution)
 
     if env_type == "rcvrp":
         sampled_data = sample_data(
-            data_dir, cities_list, dataset_size, graph_size + 1, in_distribution
+            data_dir, cities_list, dataset_size, graph_size + 1, dist_type
         )
         return prepare_rcvrp_data(sampled_data, dataset_size, graph_size)
     elif env_type == "atsp":
         sampled_data = sample_data(
-            data_dir, cities_list, dataset_size, graph_size, in_distribution
+            data_dir, cities_list, dataset_size, graph_size, dist_type
         )
         return prepare_atsp_data(sampled_data)
     elif env_type == "rcvrptw":
         sampled_data = sample_data(
-            data_dir, cities_list, dataset_size, graph_size + 1, in_distribution
+            data_dir, cities_list, dataset_size, graph_size + 1, dist_type
         )
         return prepare_rcvrptw_data(sampled_data, dataset_size, graph_size)
     else:
@@ -389,6 +414,7 @@ def generate_dataset(
     overwrite=False,
     seed=1234,
     in_distribution=False,
+    dist_type="uniform",
     disable_warning=True,
     **kwargs,
 ):
@@ -399,10 +425,15 @@ def generate_dataset(
     for graph_size in graph_sizes:
         save_dir = os.path.join(save_dir, problem)
         os.makedirs(save_dir, exist_ok=True)
-
-        fname = filename or os.path.join(
-            save_dir, f"{problem}_n{graph_size}_seed{seed}_{data_type}.npz"
-        )
+        if dist_type == "uniform":
+            fname = filename or os.path.join(
+                save_dir, f"{problem}_n{graph_size}_seed{seed}_{data_type}.npz"
+            )
+        elif dist_type == "cluster":
+            fname = filename or os.path.join(
+                save_dir,
+                f"{problem}_n{graph_size}_seed{seed}_{data_type}_{dist_type}.npz",
+            )
         fname = check_extension(fname, ".npz")
 
         if not overwrite and os.path.exists(fname):
@@ -412,7 +443,13 @@ def generate_dataset(
 
         np.random.seed(seed)
         dataset = generate_env_data(
-            problem, data_dir, dataset_size, graph_size, in_distribution, **kwargs
+            problem,
+            data_dir,
+            dataset_size,
+            graph_size,
+            in_distribution,
+            dist_type,
+            **kwargs,
         )
 
         if dataset:
@@ -428,7 +465,13 @@ if __name__ == "__main__":
         "--data_dir", default="data/dataset", help="Base directory for dataset"
     )
     parser.add_argument("--save_dir", type=str, default="data", help="save directory")
-    parser.add_argument("--problem", type=str, default="rcvrp", help="Problem type")
+    parser.add_argument(
+        "--problems",
+        type=str,
+        nargs="+",
+        default=["rcvrp", "atsp", "rcvrptw"],
+        help="List of problem types to generate",
+    )
     parser.add_argument(
         "--dataset_size", type=int, default=1280, help="Size of the dataset"
     )
@@ -440,13 +483,27 @@ if __name__ == "__main__":
     parser.add_argument(
         "--disable_warning", action="store_true", help="Disable overwrite warnings"
     )
-    parser.add_argument(
-        "--in_distribution", action="store_true", help="generate in-distribution cities"
-    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
-
     args.overwrite = args.f
     delattr(args, "f")
-    generate_dataset(**vars(args))
+
+    for in_distribution in [True, False]:
+        for dist_type in ["uniform", "cluster"]:
+            if not in_distribution and dist_type == "cluster":
+                continue
+            for problem in args.problems:
+                generate_dataset(
+                    filename=args.filename,
+                    data_dir=args.data_dir,
+                    save_dir=args.save_dir,
+                    problem=problem,
+                    dataset_size=args.dataset_size,
+                    graph_sizes=args.graph_sizes,
+                    overwrite=args.overwrite,
+                    seed=args.seed,
+                    in_distribution=in_distribution,
+                    dist_type=dist_type,
+                    disable_warning=args.disable_warning,
+                )

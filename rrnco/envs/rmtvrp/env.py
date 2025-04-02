@@ -135,7 +135,6 @@ class RMTVRPEnv(RL4COEnvBase):
         self._make_spec(self.generator)
 
     def _step(self, td: TensorDict) -> TensorDict:
-
         prev_node, curr_node = td["current_node"], td["action"]
         b_idx = torch.arange(td.batch_size[0])
         distance = td["distance_matrix"][b_idx, prev_node, curr_node]

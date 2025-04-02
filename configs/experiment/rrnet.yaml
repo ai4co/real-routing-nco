@@ -24,10 +24,10 @@ model:
     _target_: "rrnco.models.policy.RRNetPolicy"
     env_name: "${env.name}"
     init_embedding_kwargs:
-        use_coords: False
-        use_polar_feats: False
+        use_coords: True
+        use_polar_feats: True
         use_dist: True
-        use_matnet_init: True
+        use_matnet_init: False
         sample_type: "prob"
         sample_size: 25
     embed_dim: 128
@@ -40,7 +40,7 @@ model:
   val_data_size: 1280
   test_data_size: 1280
   optimizer_kwargs:
-    lr: 1e-4
+    lr: 4e-4
     weight_decay: 1e-6
   lr_scheduler:
     "MultiStepLR"

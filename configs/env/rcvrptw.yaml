@@ -4,14 +4,14 @@ name: rcvrptw
 generator_params:
   num_loc: 100 # training graph_size
   variant_preset: vrptw
-  data_path: ${paths.root_dir}/data/dataset
+  data_path: ../../../data/dataset
   file_name: splited_cities_list
 data_dir: ${paths.root_dir}/data/${env.name}
 
 # Note that validation is not used for guiding training and this is already the test set
 # so we can directly check the progress here!
 val_file: [
-  "rcvrptw_n100_seed3333_out_of_distribution.npz"
+  "rcvrptw_n100_seed1234_in_distribution.npz"
 ]
 val_dataloader_names: ["val"]
 test_file: ${env.val_file}

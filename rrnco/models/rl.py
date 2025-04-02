@@ -54,7 +54,6 @@ class RRNet(REINFORCE):
         no_aug_coords: bool = True,
         **kwargs,
     ):
-
         self.save_hyperparameters(logger=False)
 
         if policy is None:
@@ -91,7 +90,6 @@ class RRNet(REINFORCE):
     def shared_step(
         self, batch: Any, batch_idx: int, phase: str, dataloader_idx: int = None
     ):
-
         td = self.env.reset(batch)
         n_aug, n_start = self.num_augment, self.num_starts
         n_start = self.env.get_num_starts(td) if n_start is None else n_start

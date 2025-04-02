@@ -297,10 +297,7 @@ class AttnFree_Block(nn.Module):
         row_emb = self.norm1(row_emb)
         col_emb = self.norm2(col_emb)
 
-        # 1. original adapt_bias
-        # adapt_bias = -self.alpha * math.log2(cost_mat.shape[1]) * cost_mat
-
-        # 2. angle_distance_fusion_adapt_bias
+        # Nerual Adaptive Bias (NAB)
         adapt_bias = (
             self.angle_distance_fusion(coords, cost_mat, duration_mat) * self.alpha
         )

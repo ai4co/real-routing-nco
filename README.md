@@ -88,7 +88,77 @@ Instructions on how to install the OSRM backend and generate (new) datasets [dat
 
 ### How to run
 
-TODO
+To get started with running RRNCO, please follow the steps below:
+
+---
+**1. Prepare the dataset**
+
+After generating city data using the data generation pipeline, move the generated files to the following directory:
+
+`data/dataset/{city}/{city}_data.npz`
+
+For example, if the city is Seoul, the data file should be located at:
+
+`data/dataset/Seoul/Seoul_data.npz`
+
+Additionally, the file `data/dataset/splited_cities_list.json` contains a predefined split of cities into training and test sets. If you wish to modify the training cities, simply edit the list under the `"train"` key in this JSON file.
+
+**2. Generate validation dataset for training**
+
+To generate validation data (used during training), run:
+
+```bash
+python generate_data.py
+```
+
+**3. Generate test dataset**
+
+To generate the test dataset (used during evaluation with `test.py`), run:
+
+
+```bash
+python generate_data.py --seed 3333
+
+```
+
+**4. Generate test dataset**
+
+To train a model, use the `train.py` script. For example, to train a model for the ATSP problem:
+
+```bash
+python train.py experiment=rrnet env=atsp
+```
+Available environment options are:
+
+- atsp (Asymmetric TSP)
+
+- rcvrp (Real-world Capacitated VRP(ACVRP))
+
+- rcvrptw (Real-world Capacitated VRP with Time Windows(ACVRPTW))
+
+You can also configure experiment settings using the file `config/experiment/rrnet.yaml`.
+
+**5. Evaluate the model**
+
+You can evaluate a trained model using the `test.py` script. Make sure to provide the correct dataset path via `--datasets` and model checkpoint via `--checkpoint`.
+
+Examples for different tasks:
+
+**ATSP**
+```bash
+python test.py --problem atsp --datasets data/atsp/atsp_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/atsp/epoch_199.ckpt
+```
+
+**RCVRP**
+```bash
+python test.py --problem rcvrp --datasets data/rcvrp/rcvrp_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/rcvrp/epoch_199.ckpt
+```
+
+**RCVRPTW**
+```bash
+python test.py --problem rcvrptw --datasets data/rcvrptw/rcvrptw_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/rcvrptw/epoch_199.ckpt
+```
+
 
 
 ### 🤩 Citation

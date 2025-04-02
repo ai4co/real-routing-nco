@@ -62,7 +62,6 @@ class RouteFinderEncoder(nn.Module):
     def forward(
         self, td: Tensor, mask: Union[Tensor, None] = None
     ) -> Tuple[Tensor, Tensor]:
-
         # Transfer to embedding space
         init_h = self.init_embedding(td)  # [B, N, H]
 

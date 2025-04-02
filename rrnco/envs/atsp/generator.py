@@ -57,6 +57,7 @@ class ATSPGenerator(Generator):
         self.data_path = data_path
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
+
         if os.path.exists(f"{base_dir}/{data_path}/{file_name}.json"):
             with open(f"{base_dir}/{data_path}/{file_name}.json", "r") as f:
                 cities_list = orjson.loads(f.read())

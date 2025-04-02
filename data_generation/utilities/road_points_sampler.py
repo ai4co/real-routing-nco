@@ -288,9 +288,12 @@ def main():
     if args.timestamp:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    filtered_roads, removed_roads, water_features_projected, water_buffer = (
-        get_city_data_with_cache(city, bounding_coordinates_path, timestamp)
-    )
+    (
+        filtered_roads,
+        removed_roads,
+        water_features_projected,
+        water_buffer,
+    ) = get_city_data_with_cache(city, bounding_coordinates_path, timestamp)
 
     area_of_interest_projected = get_area_of_interest(city, bounding_coordinates_path)
 

@@ -35,7 +35,6 @@ class RouteFinderPolicy(AttentionModelPolicy):
         extra_encoder_kwargs: dict = {},
         **kwargs,
     ):
-
         encoder = RouteFinderEncoder(
             init_embedding=init_embedding,
             num_heads=num_heads,

@@ -29,7 +29,6 @@ class MTPOMOPolicy(AttentionModelPolicy):
         context_embedding: MTVRPContextEmbedding = None,
         **kwargs,
     ):
-
         if init_embedding is None:
             init_embedding = MTVRPInitEmbedding(embed_dim=embed_dim)
         else:

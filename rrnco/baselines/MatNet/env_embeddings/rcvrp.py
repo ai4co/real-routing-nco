@@ -33,7 +33,6 @@ class RVRPInitEmbedding(nn.Module):
         self.col_combine_embed = nn.Linear(embed_dim * 2, embed_dim, linear_bias)
 
     def forward(self, td: TensorDict):
-
         distance = td["distance_matrix"]
         b, r, c = distance.shape
 

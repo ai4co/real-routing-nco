@@ -113,7 +113,6 @@ class ATSPEnv(RL4COEnvBase):
             "i": i,
             "action_mask": available,
         }
-
         # Add normalization metadata if applicable
         if self.normalize:
             td_reset_data.update(
