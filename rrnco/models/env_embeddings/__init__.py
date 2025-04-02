@@ -1,6 +1,6 @@
 import torch.nn as nn
-from rl4co.models.nn.env_embeddings.context import (TSPContext, VRPContext,
-                                                    VRPTWContext)
+
+from rl4co.models.nn.env_embeddings.context import TSPContext, VRPContext, VRPTWContext
 from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding
 
 from .atsp import ATSPInitEmbedding

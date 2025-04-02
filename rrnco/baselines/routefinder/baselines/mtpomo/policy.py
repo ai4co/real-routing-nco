@@ -3,7 +3,9 @@ from rl4co.models.zoo.am import AttentionModelPolicy
 from rl4co.utils.pylogger import get_pylogger
 
 from rrnco.baselines.routefinder.env_embeddings.mtvrp import (
-    MTVRPContextEmbedding, MTVRPInitEmbedding)
+    MTVRPContextEmbedding,
+    MTVRPInitEmbedding,
+)
 
 log = get_pylogger(__name__)
 

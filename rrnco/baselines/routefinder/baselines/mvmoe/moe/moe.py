@@ -13,6 +13,7 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
+
 from torch.distributions.normal import Normal
 
 __all__ = ["MoE"]

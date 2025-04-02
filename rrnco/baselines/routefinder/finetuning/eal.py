@@ -2,10 +2,10 @@ from copy import deepcopy
 
 import torch
 
-from rrnco.baselines.routefinder.env_embeddings.mtvrp.context import \
-    MTVRPContextEmbeddingFull
-from rrnco.baselines.routefinder.env_embeddings.mtvrp.init import \
-    MTVRPInitEmbeddingFull
+from rrnco.baselines.routefinder.env_embeddings.mtvrp.context import (
+    MTVRPContextEmbeddingFull,
+)
+from rrnco.baselines.routefinder.env_embeddings.mtvrp.init import MTVRPInitEmbeddingFull
 
 from .utils import freeze_backbone
 

@@ -1,6 +1,7 @@
 from typing import Callable
 
 import torch.nn as nn
+
 from rl4co.models.zoo.am import AttentionModelPolicy
 
 from .decoder import MVMoEDecoder

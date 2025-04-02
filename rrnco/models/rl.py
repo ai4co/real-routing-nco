@@ -1,6 +1,7 @@
 from typing import Any, Union
 
 import torch.nn as nn
+
 from rl4co.envs.common.base import RL4COEnvBase
 from rl4co.models.rl.reinforce.reinforce import REINFORCE
 from rl4co.utils.ops import gather_by_index, unbatchify

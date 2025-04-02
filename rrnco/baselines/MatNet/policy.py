@@ -1,9 +1,9 @@
 from typing import Callable, Optional, Union
 
 import torch.nn as nn
+
 from rl4co.envs import RL4COEnvBase, get_env
-from rl4co.models.common.constructive.autoregressive import \
-    AutoregressivePolicy
+from rl4co.models.common.constructive.autoregressive import AutoregressivePolicy
 from rl4co.utils.decoding import get_log_likelihood
 from rl4co.utils.ops import calculate_entropy
 from rl4co.utils.pylogger import get_pylogger

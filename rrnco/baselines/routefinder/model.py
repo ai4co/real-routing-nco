@@ -2,16 +2,19 @@ from typing import Any, Optional
 
 import torch
 import torch.nn as nn
+
 from rl4co.envs.common.base import RL4COEnvBase
 from rl4co.models.zoo.pomo import POMO
 from rl4co.utils.ops import gather_by_index, unbatchify
 from rl4co.utils.pylogger import get_pylogger
 from tensordict import TensorDict
 
-from rrnco.baselines.routefinder.reward_normalization import (CumulativeMean,
-                                                              ExponentialMean,
-                                                              NoNormalization,
-                                                              ZNormalization)
+from rrnco.baselines.routefinder.reward_normalization import (
+    CumulativeMean,
+    ExponentialMean,
+    NoNormalization,
+    ZNormalization,
+)
 
 log = get_pylogger(__name__)
 
@@ -212,7 +215,9 @@ class RouteFinderMoE(RouteFinderBase):
         **kwargs,
     ):
         from rrnco.baselines.routefinder.baselines.mvmoe.policy import (
-            MVMoELightPolicy, MVMoEPolicy)
+            MVMoELightPolicy,
+            MVMoEPolicy,
+        )
 
         assert isinstance(
             policy, (MVMoEPolicy, MVMoELightPolicy)

@@ -1,4 +1,5 @@
 import torch.nn as nn
+
 from rl4co.models.nn.env_embeddings.context import TSPContext, VRPContext
 from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding
 

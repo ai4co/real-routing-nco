@@ -1,6 +1,7 @@
 from typing import Optional
 
 import torch
+
 from rl4co.envs.common.base import RL4COEnvBase
 from rl4co.envs.common.utils import batch_to_scalar
 from rl4co.utils.pylogger import get_pylogger

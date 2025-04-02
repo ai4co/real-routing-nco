@@ -1,4 +1,5 @@
 import torch
+
 from rl4co.utils.pylogger import get_pylogger
 from tensordict.tensordict import TensorDict
 
@@ -10,6 +11,7 @@ def render(
 ):
     import matplotlib.pyplot as plt
     import numpy as np
+
     from matplotlib import cm, colormaps
 
     num_routine = (actions == 0).sum().item() + 2

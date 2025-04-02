@@ -1,13 +1,14 @@
 import math
+
 from dataclasses import dataclass, fields
 from typing import Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+
 from einops import rearrange
 from rl4co.envs import RL4COEnvBase
-from rl4co.models.common.constructive.autoregressive.decoder import \
-    AutoregressiveDecoder
+from rl4co.models.common.constructive.autoregressive.decoder import AutoregressiveDecoder
 from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding
 from rl4co.models.nn.mlp import MLP
 from rl4co.utils.ops import batchify, gather_by_index, unbatchify

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+
 from matplotlib import cm, colormaps
 from rl4co.utils.pylogger import get_pylogger
 

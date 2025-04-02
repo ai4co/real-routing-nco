@@ -3,6 +3,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from rl4co.envs import RL4COEnvBase
 from rl4co.models.nn.attention import MultiHeadCrossAttention
 from rl4co.models.nn.ops import TransformerFFN

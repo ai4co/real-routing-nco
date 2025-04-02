@@ -1,17 +1,21 @@
 import argparse
 import json
 import os
+
 from typing import Dict, List, Tuple
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
+
 from shapely.geometry import Polygon
 
-from data_generation.utilities import (generate_random_points,
-                                       get_city_data_with_cache,
-                                       save_points_to_csv)
+from data_generation.utilities import (
+    generate_random_points,
+    get_city_data_with_cache,
+    save_points_to_csv,
+)
 
 SEED = 42
 

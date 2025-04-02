@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 import orjson
+
 from rl4co.data.utils import check_extension
 from rl4co.utils.pylogger import get_pylogger
 

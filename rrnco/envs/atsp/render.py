@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+
 from rl4co.utils.ops import gather_by_index
 from rl4co.utils.pylogger import get_pylogger
 

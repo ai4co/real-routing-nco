@@ -4,10 +4,23 @@ from typing import Tuple, Union
 
 import numpy as np
 import torch
-from pyvrp import (Client, CostEvaluator, Depot, ProblemData,
-                   RandomNumberGenerator, Solution, VehicleType)
-from pyvrp.search import (NODE_OPERATORS, ROUTE_OPERATORS, LocalSearch,
-                          NeighbourhoodParams, compute_neighbours)
+
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    Depot,
+    ProblemData,
+    RandomNumberGenerator,
+    Solution,
+    VehicleType,
+)
+from pyvrp.search import (
+    NODE_OPERATORS,
+    ROUTE_OPERATORS,
+    LocalSearch,
+    NeighbourhoodParams,
+    compute_neighbours,
+)
 from rl4co.utils.ops import get_distance_matrix
 from rl4co.utils.pylogger import get_pylogger
 from tensordict.tensordict import TensorDict
