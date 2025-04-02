@@ -72,14 +72,60 @@ Then synchronize the dependencies:
 uv sync --all-groups
 ```
 
-### Data download
+### Data download 
+#### Visit the RRNCO Dataset Page
 
-TODO (HuggingFace)
+To use our dataset, please visit the following Hugging Face dataset page:
+[https://huggingface.co/datasets/ai4co/rrnco](https://huggingface.co/datasets/ai4co/rrnco)
+
+#### Method 1: Download the Complete Dataset (Recommended)
+
+Use git-lfs (Git Large File Storage) to clone the entire repository:
+
+1. Install git-lfs:
+   ```bash
+   # Ubuntu/Debian
+   apt-get install git-lfs
+   
+   # MacOS
+   brew install git-lfs
+   
+   # Windows download and install: https://git-lfs.github.com/
+   ```
+
+2. Initialize git-lfs:
+   ```bash
+   git lfs install
+   ```
+
+3. Clone the dataset repository:
+   ```bash
+   git clone https://huggingface.co/datasets/ai4co/rrnco
+   ```
+
+
+### Method 2: Download Specific Files Individually
+
+If you only need data for specific cities:
+
+1. Visit [https://huggingface.co/datasets/ai4co/rrnco](https://huggingface.co/datasets/ai4co/rrnco)
+2. Navigate to the `dataset` folder
+3. Select the city folder you need (e.g., `Seoul`)
+4. Download the data file for that city (e.g., `Seoul_data.npz`)
+5. Make sure to also download the `splited_cities_list.json` file from the root directory
 
 ### Model checkpoints
 
-TODO (HuggingFace)
+We provide pre-trained model checkpoints for ATSP, RCVRP, and RCVRPTW problems on Hugging Face.
 
+You can download model checkpoints as follows:
+
+1. Visit [https://huggingface.co/ai4co/rrnco](https://huggingface.co/ai4co/rrnco)
+2. Navigate to the `checkpoints` folder
+3. Select the problem folder you need (e.g., `atsp`, `rcvrp`, or `rcvrptw`)
+4. Download the checkpoint file (e.g., `epoch_199.ckpt`)
+
+After downloading, place the checkpoint files in the corresponding directory.
 
 ### Data generation
 
