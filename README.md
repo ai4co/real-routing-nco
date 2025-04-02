@@ -158,7 +158,7 @@ python test.py --problem rcvrp --datasets data/rcvrp/rcvrp_n100_seed3333_in_dist
 ```bash
 python test.py --problem rcvrptw --datasets data/rcvrptw/rcvrptw_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/rcvrptw/epoch_199.ckpt
 ```
-```
+
 
 
 ### 🤩 Citation
