@@ -50,97 +50,37 @@ The RRNCO model efficiently processes topology information by leveraging several
 
 
 
-## Installation
+## 🚀 Installation
 
-We recommend using [uv](https://github.com/astral-sh/uv) for faster installation and dependency management. To install it, run:
+We use [uv](https://github.com/astral-sh/uv) (extremely fast Python package manager) to manage the dependencies:
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv --python 3.12 # create a new virtual environment
+source .venv/bin/activate # activate the virtual environment
+uv sync --all-extras # for all dependencies
 ```
 
-Then, clone the repository and cd into it:
+Note that this project is also compatible with normal `pip install -e .` in case you use a different package manager.
+
+### Data download
+
+Download data and checkpoints
+To download the data and checkpoints from HuggingFace automatically, you can use:
+
 ```bash
-git clone git@github.com:ai4co/real-routing-nco.git
-cd real-routing-nco
+python scripts/download_hf.py
 ```
 
-Create a new virtual environment and activate it:
-```bash
-uv venv --python 3.12
-source .venv/bin/activate
-```
-
-Then synchronize the dependencies:
-```bash
-uv sync --all-groups
-```
-
-### Data download 
-#### Visit the RRNCO Dataset Page
-
-To use our dataset, please visit the following Hugging Face dataset page:
-[https://huggingface.co/datasets/ai4co/rrnco](https://huggingface.co/datasets/ai4co/rrnco)
-
-#### Method 1: Download the Complete Dataset (Recommended)
-
-Use git-lfs (Git Large File Storage) to clone the entire repository:
-
-1. Install git-lfs:
-   ```bash
-   # Ubuntu/Debian
-   apt-get install git-lfs
-   
-   # MacOS
-   brew install git-lfs
-   
-   # Windows download and install: https://git-lfs.github.com/
-   ```
-
-2. Initialize git-lfs:
-   ```bash
-   git lfs install
-   ```
-
-3. Clone the dataset repository:
-   ```bash
-   git clone https://huggingface.co/datasets/ai4co/rrnco
-   ```
+You may use the option "--no-data" to skip the dataset or "--no-models" to skip the checkpoints.
 
 
-### Method 2: Download Specific Files Individually
+## Data generation
 
-If you only need data for specific cities:
+> [!TIP]
+> This is already done when you download the dataset from HuggingFace. You can skip this step if you only want to use the pretrained models.
 
-1. Visit [https://huggingface.co/datasets/ai4co/rrnco](https://huggingface.co/datasets/ai4co/rrnco)
-2. Navigate to the `dataset` folder
-3. Select the city folder you need (e.g., `Seoul`)
-4. Download the data file for that city (e.g., `Seoul_data.npz`)
-5. Make sure to also download the `splited_cities_list.json` file from the root directory
-
-### Model checkpoints
-
-We provide pre-trained model checkpoints for ATSP, RCVRP, and RCVRPTW problems on Hugging Face.
-
-You can download model checkpoints as follows:
-
-1. Visit [https://huggingface.co/ai4co/rrnco](https://huggingface.co/ai4co/rrnco)
-2. Navigate to the `checkpoints` folder
-3. Select the problem folder you need (e.g., `atsp`, `rcvrp`, or `rcvrptw`)
-4. Download the checkpoint file (e.g., `epoch_199.ckpt`)
-
-After downloading, place the checkpoint files in the corresponding directory.
-
-### Data generation
-
+### Dataset generation
 Instructions on how to install the OSRM backend and generate (new) datasets [data_generation](data_generation/README.md) folder.
-
-
-### How to run
-
-To get started with running RRNCO, please follow the steps below:
-
----
-**1. Prepare the dataset**
 
 After generating city data using the data generation pipeline, move the generated files to the following directory:
 
@@ -152,25 +92,25 @@ For example, if the city is Seoul, the data file should be located at:
 
 Additionally, the file `data/dataset/splited_cities_list.json` contains a predefined split of cities into training and test sets. If you wish to modify the training cities, simply edit the list under the `"train"` key in this JSON file.
 
-**2. Generate validation dataset for training**
 
-To generate validation data (used during training), run:
+### Test instances generation
 
-```bash
-python generate_data.py
-```
-
-**3. Generate test dataset**
-
-To generate the test dataset (used during evaluation with `test.py`), run:
+To (re)generate the test dataset (included in HuggingFace already):
 
 
 ```bash
-python generate_data.py --seed 3333
-
+python scripts/generate_data.py
 ```
 
-**4. Generate test dataset**
+This will generate test instance from the dataset provided above.
+
+
+## How to run
+
+To get started with running RRNCO, please follow the steps below:
+
+
+### Training
 
 To train a model, use the `train.py` script. For example, to train a model for the ATSP problem:
 
@@ -187,7 +127,7 @@ Available environment options are:
 
 You can also configure experiment settings using the file `config/experiment/rrnet.yaml`.
 
-**5. Evaluate the model**
+### Model Testing
 
 You can evaluate a trained model using the `test.py` script. Make sure to provide the correct dataset path via `--datasets` and model checkpoint via `--checkpoint`.
 
@@ -207,6 +147,7 @@ python test.py --problem rcvrp --datasets data/rcvrp/rcvrp_n100_seed3333_in_dist
 ```bash
 python test.py --problem rcvrptw --datasets data/rcvrptw/rcvrptw_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/rcvrptw/epoch_199.ckpt
 ```
+
 
 
 
