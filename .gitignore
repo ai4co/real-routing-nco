@@ -11,6 +11,9 @@
 *.osrm
 *.pbf
 
+# Remove LKH binaries
+rrnco/baselines/lkh/LKH-*
+
 # Logs
 /logs
 
