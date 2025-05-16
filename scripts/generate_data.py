@@ -412,7 +412,7 @@ def generate_dataset(
     dataset_size=1280,
     graph_sizes=[100],
     overwrite=False,
-    seed=1234,
+    seed=3333,
     in_distribution=False,
     dist_type="uniform",
     disable_warning=True,
@@ -479,7 +479,7 @@ if __name__ == "__main__":
         "--graph_sizes", type=int, nargs="+", default=[100], help="Graph sizes"
     )
     parser.add_argument("-f", action="store_true", help="Overwrite existing datasets")
-    parser.add_argument("--seed", type=int, default=1234, help="Random seed")
+    parser.add_argument("--seed", type=int, default=3333, help="Random seed")
     parser.add_argument(
         "--disable_warning", action="store_true", help="Disable overwrite warnings"
     )
