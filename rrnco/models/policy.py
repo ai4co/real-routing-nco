@@ -54,6 +54,7 @@ class RRNetPolicy(AutoregressivePolicy):
         moe_kwargs: Keyword arguments for MoE,
             e.g., {"encoder": {"hidden_act": "ReLU", "num_experts": 4, "k": 2, "noisy_gating": True},
                    "decoder": {"light_version": True, ...}}
+        nab_type: Type of Neural Adaptive Bias to use in the attention mechanism ("gating", "naive", or "heuristic")
     """
 
     def __init__(
@@ -86,6 +87,7 @@ class RRNetPolicy(AutoregressivePolicy):
         val_decode_type: str = "greedy",
         test_decode_type: str = "greedy",
         moe_kwargs: dict = {"encoder": None, "decoder": None},
+        nab_type: str = "gating",  # "gating" or "naive"
         **unused_kwargs,
     ):
         if encoder is None:
@@ -101,6 +103,7 @@ class RRNetPolicy(AutoregressivePolicy):
                 init_embedding_kwargs=init_embedding_kwargs,
                 sdpa_fn=sdpa_fn if sdpa_fn_encoder is None else sdpa_fn_encoder,
                 moe_kwargs=moe_kwargs["encoder"],
+                nab_type=nab_type,
             )
 
         if decoder is None:

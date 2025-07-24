@@ -27,6 +27,7 @@ class RRNetEncoder(AutoregressiveEncoder):
         net: Graph Attention Network to use
         sdpa_fn: Function to use for the scaled dot product attention
         moe_kwargs: Keyword arguments for MoE
+        nab_type: Type of Neural Adaptive Bias to use ("gating", "naive", or "heuristic")
     """
 
     def __init__(
@@ -44,6 +45,7 @@ class RRNetEncoder(AutoregressiveEncoder):
         moe_kwargs: dict = None,
         use_coords: bool = False,
         use_polar_feats: bool = False,
+        nab_type: str = "gating",
     ):
         super(RRNetEncoder, self).__init__()
 
@@ -69,6 +71,7 @@ class RRNetEncoder(AutoregressiveEncoder):
                 num_layers=num_layers,
                 normalization=normalization,
                 use_duration_matrix=use_duration_matrix,
+                nab_type=nab_type,
             )
             if net is None
             else net

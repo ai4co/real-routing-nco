@@ -115,7 +115,93 @@ class Normalization(nn.Module):
             return x
 
 
-class MatrixFusion(nn.Module):
+class HeuristicNeuralAdaptiveBias(nn.Module):
+    """
+    Heuristic-based Neural Adaptive Bias with minimal learnable parameters
+    Uses simple mathematical transformations and weighted combinations
+    """
+
+    def __init__(self, embed_dim: int, use_duration_matrix: bool = False):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.use_duration_matrix = use_duration_matrix
+
+        # Minimal learnable parameters - just scaling factors
+        self.cost_scale = nn.Parameter(torch.ones(1))
+        self.angle_scale = nn.Parameter(torch.ones(1))
+        if use_duration_matrix:
+            self.duration_scale = nn.Parameter(torch.ones(1))
+
+        # Simple bias term
+        self.bias = nn.Parameter(torch.zeros(1))
+
+    def forward(self, coords, cost_mat, duration_mat=None):
+        """
+        Simple heuristic combination of cost, angle, and duration
+        """
+        # Calculate the pairwise differences
+        coords_expanded_1 = coords.unsqueeze(2)  # (batch_size, N, 1, 2)
+        coords_expanded_2 = coords.unsqueeze(1)  # (batch_size, 1, N, 2)
+        pairwise_diff = coords_expanded_1 - coords_expanded_2  # (batch_size, N, N, 2)
+
+        # Compute pairwise angles using atan2
+        angle_mat = torch.atan2(
+            pairwise_diff[..., 1], pairwise_diff[..., 0]
+        )  # (batch_size, N, N)
+
+        # Normalize inputs to [0, 1] range for stable combination
+        cost_normalized = torch.sigmoid(cost_mat)
+        angle_normalized = (angle_mat + torch.pi) / (2 * torch.pi)  # [-π, π] -> [0, 1]
+
+        # Simple weighted combination
+        adaptive_bias = (
+            self.cost_scale * cost_normalized + self.angle_scale * angle_normalized
+        )
+
+        # Add duration if available
+        if duration_mat is not None and self.use_duration_matrix:
+            duration_normalized = torch.sigmoid(duration_mat)
+            adaptive_bias = adaptive_bias + self.duration_scale * duration_normalized
+
+        # Add bias and apply tanh for bounded output
+        adaptive_bias = torch.tanh(adaptive_bias + self.bias)
+
+        return adaptive_bias
+
+
+class NaiveNeuralAdaptiveBias(nn.Module):
+    def __init__(self, embed_dim: int, use_duration_matrix: bool = False):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.num_channels = 3 if use_duration_matrix else 2
+
+        self.mlp = nn.Sequential(
+            nn.Linear(self.num_channels, embed_dim),
+            nn.SiLU(),
+            nn.Linear(embed_dim, 1),
+        )
+
+    def forward(self, coords, cost_mat, duration_mat):
+        # Calculate the pairwise differences
+        coords_expanded_1 = coords.unsqueeze(2)  # (batch_size, N, 1, 2)
+        coords_expanded_2 = coords.unsqueeze(1)  # (batch_size, 1, N, 2)
+        pairwise_diff = coords_expanded_1 - coords_expanded_2  # (batch_size, N, N, 2)
+
+        # Compute pairwise angles using atan2
+        angle_mat = torch.atan2(
+            pairwise_diff[..., 1], pairwise_diff[..., 0]
+        )  # (batch_size, N, N)
+
+        x = torch.cat(
+            [angle_mat.unsqueeze(-1), cost_mat.unsqueeze(-1), duration_mat.unsqueeze(-1)],
+            dim=-1,
+        )
+        x = self.mlp(x).squeeze(-1)
+
+        return x
+
+
+class GatingNeuralAdaptiveBias(nn.Module):
     """
     Module that fuses distance, angle, and duration matrices to generate adaptive bias
     """
@@ -298,17 +384,36 @@ class AttnFree_Block(nn.Module):
         feedforward_hidden: int = 512,
         normalization: Optional[str] = "instance",
         parallel_gated_kwargs: Optional[dict] = None,
+        nab_type: str = "gating",  # "gating", "naive", or "heuristic"
         **kwargs,
     ):
         super().__init__()
         self.embed_dim = embed_dim
+        self.nab_type = nab_type
         self.alpha = nn.Parameter(torch.ones(1))
         self.attn_free = AFTFull(dim=embed_dim, hidden_dim=embed_dim)
         self.multi_head_combine = nn.Linear(embed_dim, embed_dim)
-        self.matrix_fusion = MatrixFusion(
-            embed_dim=embed_dim,
-            use_duration_matrix=kwargs.get("use_duration_matrix", False),
-        )
+
+        # Choose Neural Adaptive Bias type based on parameter
+        if nab_type == "gating":
+            self.neural_adaptive_bias = GatingNeuralAdaptiveBias(
+                embed_dim=embed_dim,
+                use_duration_matrix=kwargs.get("use_duration_matrix", False),
+            )
+        elif nab_type == "naive":
+            self.neural_adaptive_bias = NaiveNeuralAdaptiveBias(
+                embed_dim=embed_dim,
+                use_duration_matrix=kwargs.get("use_duration_matrix", False),
+            )
+        elif nab_type == "heuristic":
+            self.neural_adaptive_bias = HeuristicNeuralAdaptiveBias(
+                embed_dim=embed_dim,
+                use_duration_matrix=kwargs.get("use_duration_matrix", False),
+            )
+        else:
+            raise ValueError(
+                f"Unknown nab_type: {nab_type}. Supported types: 'gating', 'naive', 'heuristic'"
+            )
 
         self.feed_forward = TransformerFFN(
             embed_dim=embed_dim,
@@ -328,8 +433,10 @@ class AttnFree_Block(nn.Module):
         row_emb = self.norm1(row_emb)
         col_emb = self.norm2(col_emb)
 
-        # Nerual Adaptive Bias (NAB)
-        adapt_bias = self.matrix_fusion(coords, cost_mat, duration_mat) * self.alpha
+        # Neural Adaptive Bias (NAB) - using selected type
+        adapt_bias = (
+            self.neural_adaptive_bias(coords, cost_mat, duration_mat) * self.alpha
+        )
         out_concat = self.attn_free(row_emb, y=col_emb, adapt_bias=adapt_bias)
 
         multi_head_out = self.multi_head_combine(out_concat)
@@ -348,6 +455,7 @@ class Attn_Free_Layer(nn.Module):
         feedforward_hidden: int = 512,
         normalization: Optional[str] = "instance",
         parallel_gated_kwargs: Optional[dict] = None,
+        nab_type: str = "gating",  # "gating", "naive", or "heuristic"
         **kwargs,
     ):
         super().__init__()
@@ -356,6 +464,7 @@ class Attn_Free_Layer(nn.Module):
             feedforward_hidden=feedforward_hidden,
             normalization=normalization,
             parallel_gated_kwargs=parallel_gated_kwargs,
+            nab_type=nab_type,
             **kwargs,
         )
         self.col_encoding_block = AttnFree_Block(
@@ -363,6 +472,7 @@ class Attn_Free_Layer(nn.Module):
             feedforward_hidden=feedforward_hidden,
             normalization=normalization,
             parallel_gated_kwargs=parallel_gated_kwargs,
+            nab_type=nab_type,
             **kwargs,
         )
 
@@ -392,6 +502,7 @@ class AttnFreeNet(nn.Module):
         num_layers: int = 3,
         normalization: Optional[str] = "instance",
         parallel_gated_kwargs: Optional[dict] = None,
+        nab_type: str = "gating",  # "gating", "naive", or "heuristic"
         **kwargs,
     ):
         super().__init__()
@@ -402,6 +513,7 @@ class AttnFreeNet(nn.Module):
                     feedforward_hidden=feedforward_hidden,
                     normalization=normalization,
                     parallel_gated_kwargs=parallel_gated_kwargs,
+                    nab_type=nab_type,
                     **kwargs,
                 )
                 for _ in range(num_layers)
