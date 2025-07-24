@@ -115,50 +115,76 @@ class Normalization(nn.Module):
             return x
 
 
-class DistAngleFusion(nn.Module):
+class MatrixFusion(nn.Module):
+    """
+    Module that fuses distance, angle, and duration matrices to generate adaptive bias
+    """
+
     def __init__(self, embed_dim: int, use_duration_matrix: bool = False):
-        """
-        embed_dim: the embedding dimension for row_emb and col_emb
-        hidden_dim: the intermediate dimension used inside the MLP (can be adjusted as desired)
-        """
         super().__init__()
         self.embed_dim = embed_dim
-        if use_duration_matrix:
-            self.dur_emb = nn.Sequential(
-                nn.Linear(1, embed_dim),
-                nn.ReLU(),
-                nn.Linear(embed_dim, embed_dim),  # output shape: (B, R, C, E)
-            )
-            self.combined_emb = nn.Linear(2 * embed_dim, embed_dim)
-        # coordinate -> coord_emb
-        # Concatenate row_emb and col_emb, then (2E) -> (hidden_dim) -> (embed_dim)
-        self.dist_emb = nn.Sequential(
-            nn.Linear(1, embed_dim),
-            nn.ReLU(),
-            nn.Linear(embed_dim, embed_dim),  # output shape: (B, R, C, E)
-        )
-        self.angle_emb = nn.Sequential(
-            nn.Linear(1, embed_dim),
-            nn.ReLU(),
-            nn.Linear(embed_dim, embed_dim),  # output shape: (B, R, C, E)
+        self.num_channels = 3 if use_duration_matrix else 2
+
+        # Learnable log-scale parameters
+        self.log_scale = nn.Parameter(torch.zeros(self.num_channels))
+
+        # Shared MLP and FiLM modulation
+        hidden_dim = embed_dim // 2
+        self.shared_mlp = nn.Sequential(
+            nn.Linear(1, hidden_dim), nn.SiLU(), nn.Linear(hidden_dim, embed_dim)
         )
 
-        # Gate: concatenate dist_emb and coord_emb => (2E) -> scalar gate \in (0,1)
-        self.gate = nn.Sequential(nn.Linear(embed_dim * 2, 1), nn.Sigmoid())
-        # Projection for final adapt_bias: (E) -> (1)
-        self.out_lin = nn.Linear(embed_dim, 1)
+        # FiLM parameters (gamma, beta)
+        self.film_gamma = nn.Parameter(torch.ones(self.num_channels, embed_dim))
+        self.film_beta = nn.Parameter(torch.zeros(self.num_channels, embed_dim))
+
+        # Attention gate network
+        gate_input_dim = embed_dim * self.num_channels
+        self.gate_net = nn.Sequential(
+            nn.Linear(gate_input_dim, embed_dim),
+            nn.SiLU(),
+            nn.Linear(embed_dim, self.num_channels),
+        )
+        self.gate_temperature = 1.0
+
+        # Output projection
+        self.norm = nn.LayerNorm(embed_dim)
+        self.output_proj = nn.Linear(embed_dim, 1)
+
+    def _encode_scalar(self, x: torch.Tensor, channel: int) -> torch.Tensor:
+        """
+        Encode scalar values into embeddings
+
+        Args:
+            x: Input scalar (..., 1)
+            channel: Channel index (0=distance, 1=angle, 2=duration)
+
+        Returns:
+            Encoded embedding (..., embed_dim)
+        """
+        # Apply learnable scaling
+        x = x * torch.exp(self.log_scale[channel])
+
+        # Non-linear transformation through shared MLP
+        h = self.shared_mlp(x)
+
+        # FiLM modulation
+        h = h * self.film_gamma[channel] + self.film_beta[channel]
+
+        return h
 
     def forward(
-        self, coords: torch.Tensor, cost_mat: torch.Tensor, duration_mat: torch.Tensor
-    ):
+        self,
+        coords: torch.Tensor,  # (B, N, 2)
+        cost_mat: torch.Tensor,  # (B, N, N)
+        dur_mat: Optional[torch.Tensor] = None,  # (B, N, N)
+    ) -> torch.Tensor:
         """
-        coords: shape (B, N, 2)
-        cost_mat: shape (B, N, N)
-        """
-        B, N, _ = cost_mat.shape
+        Fuse distance, angle, and duration matrices to generate adaptive bias
 
-        # coords: (batch_size, N, 2), where N is the total number of nodes (depot + cities)
-        batch_size, N, _ = coords.shape
+        Returns:
+            Adaptive bias matrix (B, N, N)
+        """
 
         # Calculate the pairwise differences
         coords_expanded_1 = coords.unsqueeze(2)  # (batch_size, N, 1, 2)
@@ -166,29 +192,33 @@ class DistAngleFusion(nn.Module):
         pairwise_diff = coords_expanded_1 - coords_expanded_2  # (batch_size, N, N, 2)
 
         # Compute pairwise angles using atan2
-        angles = torch.atan2(
+        angle_mat = torch.atan2(
             pairwise_diff[..., 1], pairwise_diff[..., 0]
         )  # (batch_size, N, N)
-        dist_emb = self.dist_emb(cost_mat.unsqueeze(-1))  # shape (B, N, N, E)
-        angle_emb = self.angle_emb(angles.unsqueeze(-1))  # shape (B, N, N, E)
-        if duration_mat is not None:
-            dur_emb = self.dur_emb(duration_mat.unsqueeze(-1))
-        # 5) Calculate the gate
-        gate_in = torch.cat([dist_emb, angle_emb], dim=-1)  # shape (B, N, N, 2E)
-        g = self.gate(gate_in)  # shape (B, N, N, 1) in (0, 1)
 
-        # 6) Weighted sum of dist_emb vs coord_emb
-        if duration_mat is not None:
-            fused_emb = self.combined_emb(
-                torch.cat([g * dur_emb + (1 - g) * angle_emb, dur_emb], dim=-1)
-            )
-        else:
-            fused_emb = g * dist_emb + (1 - g) * angle_emb  # shape (B, N, N, E)
+        # Generate embeddings for each channel
+        embeddings = []
+        embeddings.append(self._encode_scalar(cost_mat.unsqueeze(-1), 0))
+        embeddings.append(self._encode_scalar(angle_mat.unsqueeze(-1), 1))
 
-        # 7) Generate the adapt_bias (scalar) for AFTFull
-        #    (B, N, N, E) -> linear -> (B, N, N, 1) -> squeeze(-1) -> (B, N, N)
+        if dur_mat is not None:
+            embeddings.append(self._encode_scalar(dur_mat.unsqueeze(-1), 2))
 
-        adapt_bias = self.out_lin(fused_emb).squeeze(-1)  # shape (B, N, N)
+        # Build gate input
+        gate_input = torch.cat(embeddings, dim=-1)
+
+        # Calculate softmax attention weights
+        logits = self.gate_net(gate_input) / self.gate_temperature
+        attention_weights = F.softmax(logits, dim=-1)
+
+        # Fuse using weighted average
+        fused_embedding = torch.zeros_like(embeddings[0])
+        for i, emb in enumerate(embeddings):
+            fused_embedding += attention_weights[..., i : i + 1] * emb
+
+        # Generate final adaptive bias
+        fused_embedding = self.norm(fused_embedding)
+        adapt_bias = self.output_proj(fused_embedding).squeeze(-1)
 
         return adapt_bias
 
@@ -275,10 +305,11 @@ class AttnFree_Block(nn.Module):
         self.alpha = nn.Parameter(torch.ones(1))
         self.attn_free = AFTFull(dim=embed_dim, hidden_dim=embed_dim)
         self.multi_head_combine = nn.Linear(embed_dim, embed_dim)
-        self.angle_distance_fusion = DistAngleFusion(
+        self.matrix_fusion = MatrixFusion(
             embed_dim=embed_dim,
             use_duration_matrix=kwargs.get("use_duration_matrix", False),
         )
+
         self.feed_forward = TransformerFFN(
             embed_dim=embed_dim,
             feedforward_hidden=feedforward_hidden,
@@ -298,9 +329,7 @@ class AttnFree_Block(nn.Module):
         col_emb = self.norm2(col_emb)
 
         # Nerual Adaptive Bias (NAB)
-        adapt_bias = (
-            self.angle_distance_fusion(coords, cost_mat, duration_mat) * self.alpha
-        )
+        adapt_bias = self.matrix_fusion(coords, cost_mat, duration_mat) * self.alpha
         out_concat = self.attn_free(row_emb, y=col_emb, adapt_bias=adapt_bias)
 
         multi_head_out = self.multi_head_combine(out_concat)

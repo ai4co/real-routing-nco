@@ -110,6 +110,7 @@ if __name__ == "__main__":
     if "routefinder" in checkpoint_path:
         RRNet = RouteFinderBase
 
+    # model = RRNet(env=RMTVRPEnv())
     model = RRNet.load_from_checkpoint(
         checkpoint_path, map_location="cpu", strict=False, load_baseline=False
     )

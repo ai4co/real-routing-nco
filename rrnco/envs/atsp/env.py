@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import torch
 
@@ -9,6 +9,7 @@ from tensordict.tensordict import TensorDict
 from torchrl.data import Bounded, Composite, Unbounded
 
 from .generator import ATSPGenerator
+from .generator_lazy import LazyATSPGenerator
 from .render import render
 
 log = get_pylogger(__name__)
@@ -45,14 +46,32 @@ class ATSPEnv(RL4COEnvBase):
 
     def __init__(
         self,
-        generator: ATSPGenerator = None,
-        generator_params: dict = {},
+        generator: Union[ATSPGenerator, LazyATSPGenerator] = None,
+        generator_params: Union[dict, ATSPGenerator, LazyATSPGenerator] = {},
         normalize: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
         if generator is None:
-            generator = ATSPGenerator(**generator_params)
+            # generator_params가 이미 인스턴스화된 객체인지 확인
+            if isinstance(generator_params, (ATSPGenerator, LazyATSPGenerator)):
+                generator = generator_params
+            elif isinstance(generator_params, dict):
+                # 딕셔너리인 경우 _target_을 확인하여 적절한 생성기 선택
+                if (
+                    generator_params.get("_target_")
+                    == "rrnco.envs.atsp.generator_lazy.LazyATSPGenerator"
+                ):
+                    # _target_ 키를 제거하고 LazyATSPGenerator 사용
+                    generator_params_copy = generator_params.copy()
+                    generator_params_copy.pop("_target_", None)
+                    generator = LazyATSPGenerator(**generator_params_copy)
+                else:
+                    generator = ATSPGenerator(**generator_params)
+            else:
+                # 기본 생성기 사용
+                generator = ATSPGenerator()
+
         self.generator = generator
         self._make_spec(self.generator)
         self.normalize = normalize

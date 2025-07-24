@@ -94,7 +94,7 @@ class RRNetDecoder(AutoregressiveDecoder):
         self.num_heads = num_heads
 
         assert embed_dim % num_heads == 0
-        if env_name == "mtvrp":
+        if env_name == "rcvrptw":
             self.beta = nn.Parameter(torch.tensor([1.0]))
         self.context_embedding = (
             env_context_embedding(self.env_name, {"embed_dim": embed_dim})
@@ -183,7 +183,7 @@ class RRNetDecoder(AutoregressiveDecoder):
         # Compute inductive bias
 
         # distance = td["distance"] / (td["distance"].max(dim=-1, keepdim=True)[0].max(dim=-2, keepdim=True)[0] + 1e-6)
-        if self.env_name == "mtvrp":
+        if self.env_name == "rcvrptw":
             distance = gather_by_index(td["distance_matrix"], td["current_node"], dim=-2)
             duration = gather_by_index(td["duration_matrix"], td["current_node"], dim=-2)
             inductive_bias = self.alpha * distance + self.beta * duration

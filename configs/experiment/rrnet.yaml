@@ -47,7 +47,7 @@ model:
   lr_scheduler_kwargs:
     milestones: [180, 195]
     gamma: 0.1
-  no_aug_coords: True
+  no_aug_coords: False
 trainer:
   max_epochs: 200
 

@@ -54,7 +54,12 @@ class RRNet(REINFORCE):
         no_aug_coords: bool = True,
         **kwargs,
     ):
-        self.save_hyperparameters(logger=False)
+        # 환경 객체는 제외하고 환경 이름만 저장 (용량 절약 및 pickle 문제 방지)
+        # policy는 모델 파라미터가 포함되어 있으므로 반드시 포함되어야 함
+        self.save_hyperparameters(logger=False, ignore=["env"])
+
+        # 환경 이름은 별도로 저장하여 모델 로드 시 환경 재생성 가능하도록 함
+        self.env_name = env.name if hasattr(env, "name") else str(env)
 
         if policy is None:
             policy_kwargs_with_defaults = {

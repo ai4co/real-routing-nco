@@ -337,6 +337,18 @@ class RMTVRPGenerator(Generator):
             # Not subsampling problems, i.e. return tensordict with all attributes
             return td
 
+    def __getstate__(self):
+        """Pickle 시 파일 관련 데이터를 제외하여 BufferedReader 문제 방지"""
+        state = self.__dict__.copy()
+        # 파일 관련 데이터 제거 (pickle 시 문제 방지)
+        state["train_cities_list"] = None
+        return state
+
+    def __setstate__(self, state):
+        """Unpickle 시 파일 관련 데이터 초기화"""
+        self.__dict__.update(state)
+        self.train_cities_list = None
+
     def subsample_problems(self, td):
         """Create subproblems starting from seed probabilities depending on their variant.
         If random seed sampled in [0, 1] in batch is greater than prob, remove the constraint

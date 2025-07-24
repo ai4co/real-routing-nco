@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import torch
 
@@ -10,6 +10,7 @@ from tensordict.tensordict import TensorDict
 from torchrl.data import Bounded, Composite, Unbounded
 
 from .generator import RCVRPGenerator
+from .generator_lazy import LazyRCVRPGenerator
 from .render import render
 
 try:
@@ -54,15 +55,33 @@ class RCVRPEnv(RL4COEnvBase):
 
     def __init__(
         self,
-        generator: RCVRPGenerator = None,
-        generator_params: dict = {},
+        generator: Union[RCVRPGenerator, LazyRCVRPGenerator] = None,
+        generator_params: Union[dict, RCVRPGenerator, LazyRCVRPGenerator] = {},
         cdist_compute_mode: str = "use_mm_for_euclid_dist",
         normalize: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
         if generator is None:
-            generator = RCVRPGenerator(**generator_params)
+            # generator_params가 이미 인스턴스화된 객체인지 확인
+            if isinstance(generator_params, (RCVRPGenerator, LazyRCVRPGenerator)):
+                generator = generator_params
+            elif isinstance(generator_params, dict):
+                # 딕셔너리인 경우 _target_을 확인하여 적절한 생성기 선택
+                if (
+                    generator_params.get("_target_")
+                    == "rrnco.envs.rcvrp.generator_lazy.LazyRCVRPGenerator"
+                ):
+                    # _target_ 키를 제거하고 LazyRCVRPGenerator 사용
+                    generator_params_copy = generator_params.copy()
+                    generator_params_copy.pop("_target_", None)
+                    generator = LazyRCVRPGenerator(**generator_params_copy)
+                else:
+                    generator = RCVRPGenerator(**generator_params)
+            else:
+                # 기본 생성기 사용
+                generator = RCVRPGenerator()
+
         self.generator = generator
         self.cdist_compute_mode = cdist_compute_mode
         self.normalize = normalize

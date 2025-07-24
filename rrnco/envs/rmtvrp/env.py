@@ -18,6 +18,7 @@ from torchrl.data import (
 )
 
 from .generator import RMTVRPGenerator
+from .generator_lazy import LazyRMTVRPGenerator
 from .selectstartnodes import get_select_start_nodes_fn
 
 log = get_pylogger(__name__)
@@ -104,8 +105,8 @@ class RMTVRPEnv(RL4COEnvBase):
 
     def __init__(
         self,
-        generator: RMTVRPGenerator = None,
-        generator_params: dict = {},
+        generator: Union[RMTVRPGenerator, LazyRMTVRPGenerator] = None,
+        generator_params: Union[dict, RMTVRPGenerator, LazyRMTVRPGenerator] = {},
         select_start_nodes_fn: Union[str, callable] = "all",
         normalize: bool = True,
         check_solution: bool = False,
@@ -115,7 +116,24 @@ class RMTVRPEnv(RL4COEnvBase):
     ):
         super().__init__(check_solution=check_solution, **kwargs)
         if generator is None:
-            generator = RMTVRPGenerator(**generator_params)
+            # generator_params가 이미 인스턴스화된 객체인지 확인
+            if isinstance(generator_params, (RMTVRPGenerator, LazyRMTVRPGenerator)):
+                generator = generator_params
+            elif isinstance(generator_params, dict):
+                # 딕셔너리인 경우 _target_을 확인하여 적절한 생성기 선택
+                if (
+                    generator_params.get("_target_")
+                    == "rrnco.envs.rmtvrp.generator_lazy.LazyRMTVRPGenerator"
+                ):
+                    # _target_ 키를 제거하고 LazyRMTVRPGenerator 사용
+                    generator_params_copy = generator_params.copy()
+                    generator_params_copy.pop("_target_", None)
+                    generator = LazyRMTVRPGenerator(**generator_params_copy)
+                else:
+                    generator = RMTVRPGenerator(**generator_params)
+            else:
+                # 기본 생성기 사용
+                generator = RMTVRPGenerator()
 
         if check_solution:
             log.warning(

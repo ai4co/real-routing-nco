@@ -92,7 +92,7 @@ class RRNetEncoder(AutoregressiveEncoder):
         # Transfer to embedding space
         row_emb, col_emb, distance = self.init_embedding(td, phase)
 
-        if self.env_name == "mtvrp":
+        if self.env_name == "rcvrptw":
             # Process embedding
             row_emb, col_emb = self.net(
                 row_emb,

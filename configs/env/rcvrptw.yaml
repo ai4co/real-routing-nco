@@ -2,16 +2,18 @@ _target_: rrnco.envs.rmtvrp.RMTVRPEnv
 name: rcvrptw
 
 generator_params:
+  _target_: rrnco.envs.rmtvrp.generator_lazy.LazyRMTVRPGenerator
   num_loc: 100 # training graph_size
   variant_preset: vrptw
   data_path: ../../../data/dataset
   file_name: splited_cities_list
+  chunk_size: 1000  # 메모리 효율적인 청킹 크기
 data_dir: ${paths.root_dir}/data/${env.name}
 
 # Note that validation is not used for guiding training and this is already the test set
 # so we can directly check the progress here!
 val_file: [
-  "rcvrptw_n100_seed1234_in_distribution.npz"
+  "rcvrptw_n100_seed3333_in_distribution.npz"
 ]
 val_dataloader_names: ["val"]
 test_file: ${env.val_file}
