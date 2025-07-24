@@ -432,7 +432,7 @@ class AttnFree_Block(nn.Module):
 
         # Neural Adaptive Bias (NAB) - using selected type
         if self.nab_type == "gating":
-            adapt_bias = self.neural_adaptive_bias(row_emb, col_emb, cost_mat, duration_mat)
+            adapt_bias = self.neural_adaptive_bias(coords, cost_mat, duration_mat)
         else:
             adapt_bias = self.neural_adaptive_bias(coords, cost_mat, duration_mat) * self.alpha
         out_concat = self.attn_free(row_emb, y=col_emb, adapt_bias=adapt_bias)
