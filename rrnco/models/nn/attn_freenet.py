@@ -117,8 +117,8 @@ class Normalization(nn.Module):
 
 class HeuristicNeuralAdaptiveBias(nn.Module):
     """
-    Heuristic-based Neural Adaptive Bias with minimal learnable parameters
-    Uses simple mathematical transformations and weighted combinations
+    Heuristic-based Neural Adaptive Bias implementing f(N, d_ij) = -α * log₂N * d_ij
+    Uses the formula from the Instance-Conditioned Adaptation Bias Matrix
     """
 
     def __init__(self, embed_dim: int, use_duration_matrix: bool = False):
@@ -126,46 +126,43 @@ class HeuristicNeuralAdaptiveBias(nn.Module):
         self.embed_dim = embed_dim
         self.use_duration_matrix = use_duration_matrix
 
-        # Minimal learnable parameters - just scaling factors
-        self.cost_scale = nn.Parameter(torch.ones(1))
-        self.angle_scale = nn.Parameter(torch.ones(1))
+        # Learnable parameter α (alpha)
+        self.alpha = nn.Parameter(torch.ones(1))
+        
+        # Optional learnable weights for combining distance and duration matrices
         if use_duration_matrix:
-            self.duration_scale = nn.Parameter(torch.ones(1))
-
-        # Simple bias term
-        self.bias = nn.Parameter(torch.zeros(1))
+            self.distance_weight = nn.Parameter(torch.ones(1))
+            self.duration_weight = nn.Parameter(torch.ones(1))
 
     def forward(self, coords, cost_mat, duration_mat=None):
         """
-        Simple heuristic combination of cost, angle, and duration
+        Implements f(N, d_ij) = -α * log₂N * d_ij
+        
+        Args:
+            coords: Not used in this implementation
+            cost_mat: Distance matrix (B, N, N)
+            duration_mat: Duration matrix (B, N, N), optional
+        
+        Returns:
+            adaptive_bias: Instance-conditioned adaptation bias matrix (B, N, N)
         """
-        # Calculate the pairwise differences
-        coords_expanded_1 = coords.unsqueeze(2)  # (batch_size, N, 1, 2)
-        coords_expanded_2 = coords.unsqueeze(1)  # (batch_size, 1, N, 2)
-        pairwise_diff = coords_expanded_1 - coords_expanded_2  # (batch_size, N, N, 2)
-
-        # Compute pairwise angles using atan2
-        angle_mat = torch.atan2(
-            pairwise_diff[..., 1], pairwise_diff[..., 0]
-        )  # (batch_size, N, N)
-
-        # Normalize inputs to [0, 1] range for stable combination
-        cost_normalized = torch.sigmoid(cost_mat)
-        angle_normalized = (angle_mat + torch.pi) / (2 * torch.pi)  # [-π, π] -> [0, 1]
-
-        # Simple weighted combination
-        adaptive_bias = (
-            self.cost_scale * cost_normalized + self.angle_scale * angle_normalized
-        )
-
-        # Add duration if available
+        # Get the number of nodes N from the distance matrix
+        N = cost_mat.size(-1)  # N is the number of nodes
+        
+        # Calculate log₂N
+        log2_N = torch.log2(torch.tensor(N, dtype=cost_mat.dtype, device=cost_mat.device))
+        
+        # Combine distance and duration matrices if duration is available
         if duration_mat is not None and self.use_duration_matrix:
-            duration_normalized = torch.sigmoid(duration_mat)
-            adaptive_bias = adaptive_bias + self.duration_scale * duration_normalized
-
-        # Add bias and apply tanh for bounded output
-        adaptive_bias = torch.tanh(adaptive_bias + self.bias)
-
+            # Weighted combination of distance and duration matrices
+            d_ij = self.distance_weight * cost_mat + self.duration_weight * duration_mat
+        else:
+            # Use only distance matrix
+            d_ij = cost_mat
+        
+        # Apply the formula: f(N, d_ij) = -α * log₂N * d_ij
+        adaptive_bias = -log2_N * d_ij
+        
         return adaptive_bias
 
 
