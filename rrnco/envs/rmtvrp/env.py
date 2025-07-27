@@ -272,7 +272,7 @@ class RMTVRPEnv(RL4COEnvBase):
             min_distance = distance_matrix.amin(dim=(-2, -1), keepdim=True)
             max_distance = distance_matrix.amax(dim=(-2, -1), keepdim=True)
 
-            # Normalize distance using min-max scaling
+            # # Normalize distance using min-max scaling
             distance_matrix = (distance_matrix - min_distance) / (
                 max_distance - min_distance + 1e-6
             )

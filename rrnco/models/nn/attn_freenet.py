@@ -9,6 +9,50 @@ from rl4co.utils.pylogger import get_pylogger
 log = get_pylogger(__name__)
 
 
+def fourier_encode(x, freq_bands=(1, 2, 4, 8)):
+    """
+    Fourier encoding without for loop - fully vectorized for GPU efficiency
+
+    Args:
+        x: Input tensor of shape (..., 1)
+        freq_bands: Frequency bands for encoding
+
+    Returns:
+        Encoded tensor of shape (..., 1 + 2 * len(freq_bands))
+    """
+    # Convert freq_bands to tensor and reshape for broadcasting
+    freqs = torch.tensor(freq_bands, device=x.device, dtype=x.dtype)
+    freqs = freqs.view(1, -1)  # Shape: (1, num_freqs)
+
+    # Expand x for broadcasting with all frequencies at once
+    # x: (..., 1) -> (..., 1, 1)
+    x_expanded = x.unsqueeze(-1)
+
+    # Compute all frequency multiples at once
+    # Result shape: (..., 1, num_freqs)
+    x_freqs = x_expanded * freqs
+
+    # Compute sin and cos for all frequencies simultaneously
+    sin_features = torch.sin(x_freqs)  # (..., 1, num_freqs)
+    cos_features = torch.cos(x_freqs)  # (..., 1, num_freqs)
+
+    # Interleave sin and cos features
+    # Stack along new dimension: (..., 1, num_freqs, 2)
+    stacked = torch.stack([sin_features, cos_features], dim=-1)
+
+    # Reshape to (..., 1, 2 * num_freqs)
+    encoded_features = stacked.reshape(*stacked.shape[:-2], -1)
+
+    # Remove the unnecessary dimension and concatenate with original x
+    # encoded_features: (..., 2 * num_freqs)
+    encoded_features = encoded_features.squeeze(-2)
+
+    # Concatenate original x with encoded features
+    # x.squeeze(-1): (...,) -> add dimension -> (..., 1)
+    # Final shape: (..., 1 + 2 * num_freqs)
+    return torch.cat([x.squeeze(-1).unsqueeze(-1), encoded_features], dim=-1)
+
+
 class RMSNorm(nn.Module):
     """From https://github.com/meta-llama/llama-models"""
 
@@ -128,7 +172,7 @@ class HeuristicNeuralAdaptiveBias(nn.Module):
 
         # Learnable parameter α (alpha)
         self.alpha = nn.Parameter(torch.ones(1))
-        
+
         # Optional learnable weights for combining distance and duration matrices
         if use_duration_matrix:
             self.distance_weight = nn.Parameter(torch.ones(1))
@@ -137,21 +181,21 @@ class HeuristicNeuralAdaptiveBias(nn.Module):
     def forward(self, coords, cost_mat, duration_mat=None):
         """
         Implements f(N, d_ij) = -α * log₂N * d_ij
-        
+
         Args:
             coords: Not used in this implementation
             cost_mat: Distance matrix (B, N, N)
             duration_mat: Duration matrix (B, N, N), optional
-        
+
         Returns:
             adaptive_bias: Instance-conditioned adaptation bias matrix (B, N, N)
         """
         # Get the number of nodes N from the distance matrix
         N = cost_mat.size(-1)  # N is the number of nodes
-        
+
         # Calculate log₂N
         log2_N = torch.log2(torch.tensor(N, dtype=cost_mat.dtype, device=cost_mat.device))
-        
+
         # Combine distance and duration matrices if duration is available
         if duration_mat is not None and self.use_duration_matrix:
             # Weighted combination of distance and duration matrices
@@ -159,10 +203,10 @@ class HeuristicNeuralAdaptiveBias(nn.Module):
         else:
             # Use only distance matrix
             d_ij = cost_mat
-        
+
         # Apply the formula: f(N, d_ij) = -α * log₂N * d_ij
         adaptive_bias = -log2_N * d_ij
-        
+
         return adaptive_bias
 
 
@@ -213,26 +257,28 @@ class GatingNeuralAdaptiveBias(nn.Module):
 
         # Shared MLP and FiLM modulation
         hidden_dim = embed_dim // 2
+        # self.shared_mlp = nn.Sequential(
+        #     nn.Linear(1, hidden_dim), nn.SiLU(), nn.Linear(hidden_dim, hidden_dim)
+        # )
         self.shared_mlp = nn.Sequential(
-            nn.Linear(1, hidden_dim), nn.SiLU(), nn.Linear(hidden_dim, embed_dim)
+            nn.Linear(9, hidden_dim), nn.SiLU(), nn.Linear(hidden_dim, hidden_dim)
         )
-
         # FiLM parameters (gamma, beta)
-        self.film_gamma = nn.Parameter(torch.ones(self.num_channels, embed_dim))
-        self.film_beta = nn.Parameter(torch.zeros(self.num_channels, embed_dim))
+        self.film_gamma = nn.Parameter(torch.ones(self.num_channels, hidden_dim))
+        self.film_beta = nn.Parameter(torch.zeros(self.num_channels, hidden_dim))
 
         # Attention gate network
-        gate_input_dim = embed_dim * self.num_channels
+        gate_input_dim = hidden_dim * self.num_channels
         self.gate_net = nn.Sequential(
-            nn.Linear(gate_input_dim, embed_dim),
+            nn.Linear(gate_input_dim, hidden_dim),
             nn.SiLU(),
-            nn.Linear(embed_dim, self.num_channels),
+            nn.Linear(hidden_dim, self.num_channels),
         )
-        self.gate_temperature = 1.0
+        self.gate_temperature = nn.Parameter(torch.tensor(5.0))
 
         # Output projection
-        self.norm = nn.LayerNorm(embed_dim)
-        self.output_proj = nn.Linear(embed_dim, 1)
+        self.norm = nn.LayerNorm(hidden_dim)
+        self.output_proj = nn.Linear(hidden_dim, 1)
 
     def _encode_scalar(self, x: torch.Tensor, channel: int) -> torch.Tensor:
         """
@@ -279,20 +325,24 @@ class GatingNeuralAdaptiveBias(nn.Module):
             pairwise_diff[..., 1], pairwise_diff[..., 0]
         )  # (batch_size, N, N)
 
+        cost_mat = fourier_encode(cost_mat.unsqueeze(-1))
+        angle_mat = fourier_encode(angle_mat.unsqueeze(-1))
+
         # Generate embeddings for each channel
         embeddings = []
-        embeddings.append(self._encode_scalar(cost_mat.unsqueeze(-1), 0))
-        embeddings.append(self._encode_scalar(angle_mat.unsqueeze(-1), 1))
+        embeddings.append(self._encode_scalar(cost_mat, 0))
+        embeddings.append(self._encode_scalar(angle_mat, 1))
 
         if dur_mat is not None:
-            embeddings.append(self._encode_scalar(dur_mat.unsqueeze(-1), 2))
+            dur_mat = fourier_encode(dur_mat.unsqueeze(-1))
+            embeddings.append(self._encode_scalar(dur_mat, 2))
 
         # Build gate input
         gate_input = torch.cat(embeddings, dim=-1)
 
         # Calculate softmax attention weights
-        logits = self.gate_net(gate_input) / self.gate_temperature
-        attention_weights = F.softmax(logits, dim=-1)
+        logits = self.gate_net(gate_input)
+        attention_weights = F.softmax(logits / self.gate_temperature.exp(), dim=-1)
 
         # Fuse using weighted average
         fused_embedding = torch.zeros_like(embeddings[0])
@@ -434,7 +484,9 @@ class AttnFree_Block(nn.Module):
         if self.nab_type == "gating":
             adapt_bias = self.neural_adaptive_bias(coords, cost_mat, duration_mat)
         else:
-            adapt_bias = self.neural_adaptive_bias(coords, cost_mat, duration_mat) * self.alpha
+            adapt_bias = (
+                self.neural_adaptive_bias(coords, cost_mat, duration_mat) * self.alpha
+            )
         out_concat = self.attn_free(row_emb, y=col_emb, adapt_bias=adapt_bias)
 
         multi_head_out = self.multi_head_combine(out_concat)
