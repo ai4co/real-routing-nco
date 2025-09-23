@@ -5,6 +5,11 @@
 [![HuggingFace Dataset](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow)](https://huggingface.co/ai4co/rrnco)
 [![HuggingFace Models](https://img.shields.io/badge/%F0%9F%A4%97-Models-yellow)](https://huggingface.co/datasets/ai4co/rrnco)
 
+<div align="center">
+<i> RRNCO has been accepted at the NeurIPS 2025 DiffCoALG Workshop! 🥳</i>
+</div>
+
+
 
 > Note: we are currently finalizing the repository. Stay tuned!
 
