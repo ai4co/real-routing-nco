@@ -11,9 +11,6 @@
 
 
 
-> Note: we are currently finalizing the repository. Stay tuned!
-
-
 ### 🗺️ Problem
 Most NCO methods use simplified routing with 2D Euclidean distance. This is not realistic for real-world applications which can have complex 1) _distance matrices_ and 2) _duration matrices_ between locations because of road networks, traffic, and more.
 
