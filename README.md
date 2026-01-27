@@ -6,12 +6,11 @@
 [![HuggingFace Models](https://img.shields.io/badge/%F0%9F%A4%97-Models-yellow)](https://huggingface.co/datasets/ai4co/rrnco)
 
 <div align="center">
-<i> RRNCO has been accepted at the NeurIPS 2025 DiffCoALG Workshop! 🥳</i>
+<i> RRNCO has been accepted at the ICLR 2026! 🇧🇷🥳</i>
 </div>
 
+### Problem
 
-
-### 🗺️ Problem
 Most NCO methods use simplified routing with 2D Euclidean distance. This is not realistic for real-world applications which can have complex 1) _distance matrices_ and 2) _duration matrices_ between locations because of road networks, traffic, and more.
 
 <p align="center">
@@ -24,13 +23,11 @@ Most NCO methods use simplified routing with 2D Euclidean distance. This is not 
 How can we bridge this gap between toy and real settings?
 
 We need two things:
+
 1) A **dataset** with real-world routing information
 2) A **model** that can handle such data -- not only node but also _edge_ information
 
-
-
-
-### ✨ Solution 1: RRNCO Dataset
+### Solution 1: RRNCO Dataset
 
 We introduce the RRNCO (Real Routing NCO) dataset, which contains real-world routing information for 100 cities around the world, from which instances can be subsampled and generated on the fly
 
@@ -40,7 +37,7 @@ We introduce the RRNCO (Real Routing NCO) dataset, which contains real-world rou
     <em>RRNCO data generation pipeline</em>
 <br>
 
-### ✨ Solution 2: The RRNCO Model
+### Solution 2: The RRNCO Model
 
 The RRNCO model efficiently processes topology information by leveraging several techniques including scale adaptive biases
 
@@ -50,9 +47,7 @@ The RRNCO model efficiently processes topology information by leveraging several
     <em>RRNCO model architecture</em>
 <br>
 
-
-
-## 🚀 Installation
+## Installation
 
 We use [uv](https://github.com/astral-sh/uv) (extremely fast Python package manager) to manage the dependencies:
 
@@ -75,13 +70,13 @@ python scripts/download_hf.py
 
 You may use the option "--no-data" to skip the dataset or "--no-models" to skip the checkpoints.
 
-
 ## Data generation
 
 > [!TIP]
 > This is already done when you download the dataset from HuggingFace. You can skip this step if you only want to use the pretrained models.
 
 ### Dataset generation
+
 Instructions on how to install the OSRM backend and generate (new) datasets [data_generation](data_generation/README.md) folder.
 
 After generating city data using the data generation pipeline, move the generated files to the following directory:
@@ -94,11 +89,9 @@ For example, if the city is Seoul, the data file should be located at:
 
 Additionally, the file `data/dataset/splited_cities_list.json` contains a predefined split of cities into training and test sets. If you wish to modify the training cities, simply edit the list under the `"train"` key in this JSON file.
 
-
 ### Test instances generation
 
 To (re)generate the test dataset (included in HuggingFace already):
-
 
 ```bash
 python scripts/generate_data.py
@@ -106,11 +99,9 @@ python scripts/generate_data.py
 
 This will generate test instance from the dataset provided above.
 
-
 ## How to run
 
 To get started with running RRNCO, please follow the steps below:
-
 
 ### Training
 
@@ -119,12 +110,11 @@ To train a model, use the `train.py` script. For example, to train a model for t
 ```bash
 python train.py experiment=rrnet env=atsp
 ```
+
 Available environment options are:
 
 - atsp (Asymmetric TSP)
-
 - rcvrp (Real-world Capacitated VRP(ACVRP))
-
 - rcvrptw (Real-world Capacitated VRP with Time Windows(ACVRPTW))
 
 You can also configure experiment settings using the file `config/experiment/rrnet.yaml`.
@@ -136,34 +126,34 @@ You can evaluate a trained model using the `test.py` script. Make sure to provid
 Examples for different tasks:
 
 **ATSP**
+
 ```bash
 python test.py --problem atsp --datasets data/atsp/atsp_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/atsp/epoch_199.ckpt
 ```
 
 **RCVRP**
+
 ```bash
 python test.py --problem rcvrp --datasets data/rcvrp/rcvrp_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/rcvrp/epoch_199.ckpt
 ```
 
 **RCVRPTW**
+
 ```bash
 python test.py --problem rcvrptw --datasets data/rcvrptw/rcvrptw_n100_seed3333_in_distribution.npz --batch_size 32 --checkpoint checkpoints/rcvrptw/epoch_199.ckpt
 ```
 
+### Citation
 
-
-
-### 🤩 Citation
 If you find RRNCO valuable for your research or applied projects:
 
 ```bibtex
-@article{son2025rrnco_neuralcombinatorialoptimizationrealworldrouting,
-      title={{Neural Combinatorial Optimization for Real-World Routing}},
-      author={Jiwoo Son and Zhikai Zhao and Federico Berto and Chuanbo Hua and Changhyun Kwon and Jinkyoo Park},
-      year={2025},
-      eprint={2503.16159},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://github.com/ai4co/real-routing-nco},
+@inproceedings{son2026rrnconeuralcombinatorialoptimizationrealworldrouting,
+  title     = {Towards Real-World Routing with Neural Combinatorial Optimization},
+  author    = {Son, Jiwoo and Zhao, Zhikai and Berto, Federico and Hua, Chuanbo and Cao, Zhiguang and Kwon, Changhyun and Park, Jinkyoo},
+  booktitle = {Proceedings of the International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  url       = {https://openreview.net/forum?id=sKvo9ZZfpe}
 }
+
 ```
