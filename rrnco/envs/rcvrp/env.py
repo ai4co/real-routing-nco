@@ -63,23 +63,23 @@ class RCVRPEnv(RL4COEnvBase):
     ):
         super().__init__(**kwargs)
         if generator is None:
-            # generator_params가 이미 인스턴스화된 객체인지 확인
+            # Check if generator_params is already an instantiated object
             if isinstance(generator_params, (RCVRPGenerator, LazyRCVRPGenerator)):
                 generator = generator_params
             elif isinstance(generator_params, dict):
-                # 딕셔너리인 경우 _target_을 확인하여 적절한 생성기 선택
+                # If it's a dictionary, check _target_ to select the appropriate generator
                 if (
                     generator_params.get("_target_")
                     == "rrnco.envs.rcvrp.generator_lazy.LazyRCVRPGenerator"
                 ):
-                    # _target_ 키를 제거하고 LazyRCVRPGenerator 사용
+                    # Remove _target_ key and use LazyRCVRPGenerator
                     generator_params_copy = generator_params.copy()
                     generator_params_copy.pop("_target_", None)
                     generator = LazyRCVRPGenerator(**generator_params_copy)
                 else:
                     generator = RCVRPGenerator(**generator_params)
             else:
-                # 기본 생성기 사용
+                # Use default generator
                 generator = RCVRPGenerator()
 
         self.generator = generator
@@ -146,7 +146,13 @@ class RCVRPEnv(RL4COEnvBase):
 
         # Common fields for TensorDict
         td_reset_data = {
-            "locs": torch.cat((td["depot"][:, None, :], td["locs"]), dim=-2),
+            "locs": torch.cat(
+                (
+                    td["depot"].unsqueeze(1) if td["depot"].ndim == 2 else td["depot"],
+                    td["locs"],
+                ),
+                dim=-2,
+            ),
             "distance_matrix": distance,
             "demand": td["demand"],
             "current_node": torch.zeros(*batch_size, 1, dtype=torch.long, device=device),

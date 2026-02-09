@@ -194,7 +194,7 @@ class LazyATSPGenerator(Generator):
                 chunk_data = sampled_data
             else:
                 # Efficient concatenation
-                for key in ["points", "distance", "duration"]:
+                for key in ["points", "distance_matrix", "duration"]:
                     if key in sampled_data:
                         chunk_data[key] = np.concatenate(
                             (chunk_data[key], sampled_data[key]), axis=0
@@ -209,6 +209,9 @@ class LazyATSPGenerator(Generator):
         """Generate synthetic data chunk"""
         # Generate distance matrices inspired by the reference MatNet (Kwon et al., 2021)
         # We satisfy the triangle inequality (TMAT class) in a batch
+
+        # Generate random locations for visualization and coordinate-based features
+        locs = torch.rand(*batch_size, self.num_loc, 2)
 
         # Sample distance matrix elements
         dms = (
@@ -227,6 +230,7 @@ class LazyATSPGenerator(Generator):
 
         return TensorDict(
             {
+                "locs": locs,
                 "distance_matrix": dms,
             },
             batch_size=batch_size,
@@ -235,10 +239,18 @@ class LazyATSPGenerator(Generator):
     def _process_real_world_data(self, chunk_data: dict, batch_size: list) -> TensorDict:
         """Process real world data into TensorDict"""
         # Use distance matrix directly from real world data
-        distance = torch.from_numpy(chunk_data["distance"].astype(np.float32))
+        distance = torch.from_numpy(chunk_data["distance_matrix"].astype(np.float32))
+
+        # Normalize points to [0, 1] range for locs
+        points = chunk_data["points"].astype(np.float32)
+        points_min = np.min(points, axis=1, keepdims=True)
+        points_max = np.max(points, axis=1, keepdims=True)
+        locs = (points - points_min) / (points_max - points_min + 1e-6)
+        locs = torch.from_numpy(locs)
 
         return TensorDict(
             {
+                "locs": locs,
                 "distance_matrix": distance,
             },
             batch_size=batch_size,

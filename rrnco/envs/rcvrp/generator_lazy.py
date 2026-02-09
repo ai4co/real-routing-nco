@@ -257,7 +257,7 @@ class LazyRCVRPGenerator(Generator):
             )
 
         # Sample demand
-        demand = self.demand_sampler((*batch_size, self.num_loc))
+        demand = self.demand_sampler.sample((*batch_size, self.num_loc))
 
         # Sample capacity
         capacity = torch.full((*batch_size, 1), self.capacity, dtype=torch.float32)
@@ -281,7 +281,7 @@ class LazyRCVRPGenerator(Generator):
         locs = torch.from_numpy(points[:, 1:, :]).float()  # Rest are customer locations
 
         # Generate demand
-        demand = self.demand_sampler((*batch_size, self.num_loc))
+        demand = self.demand_sampler.sample((*batch_size, self.num_loc))
 
         # Generate capacity
         capacity = torch.full((*batch_size, 1), self.capacity, dtype=torch.float32)
