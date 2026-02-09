@@ -53,23 +53,23 @@ class ATSPEnv(RL4COEnvBase):
     ):
         super().__init__(**kwargs)
         if generator is None:
-            # generator_params가 이미 인스턴스화된 객체인지 확인
+            # Check if generator_params is already an instantiated object
             if isinstance(generator_params, (ATSPGenerator, LazyATSPGenerator)):
                 generator = generator_params
             elif isinstance(generator_params, dict):
-                # 딕셔너리인 경우 _target_을 확인하여 적절한 생성기 선택
+                # If it's a dictionary, check _target_ to select the appropriate generator
                 if (
                     generator_params.get("_target_")
                     == "rrnco.envs.atsp.generator_lazy.LazyATSPGenerator"
                 ):
-                    # _target_ 키를 제거하고 LazyATSPGenerator 사용
+                    # Remove _target_ key and use LazyATSPGenerator
                     generator_params_copy = generator_params.copy()
                     generator_params_copy.pop("_target_", None)
                     generator = LazyATSPGenerator(**generator_params_copy)
                 else:
                     generator = ATSPGenerator(**generator_params)
             else:
-                # 기본 생성기 사용
+                # Use default generator
                 generator = ATSPGenerator()
 
         self.generator = generator
@@ -105,9 +105,11 @@ class ATSPEnv(RL4COEnvBase):
         return td
 
     def _reset(self, td: Optional[TensorDict] = None, batch_size=None) -> TensorDict:
-        # Initialize distance matrix
+        # Initialize distance matrix and locs
         distance = td["distance_matrix"]
+        locs = td.get("locs", None)  # Get locs if available
         device = td.device
+
         if self.normalize:
             # Calculate min and max distances for normalization
             min_distance = distance.amin(dim=(-2, -1), keepdim=True)
@@ -119,8 +121,9 @@ class ATSPEnv(RL4COEnvBase):
 
         # Other variables
         current_node = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
+        num_loc = distance.shape[-1]
         available = torch.ones(
-            (*batch_size, self.generator.num_loc), dtype=torch.bool, device=device
+            (*batch_size, num_loc), dtype=torch.bool, device=device
         )  # 1 means not visited, i.e. action is allowed
         i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
 
@@ -132,6 +135,11 @@ class ATSPEnv(RL4COEnvBase):
             "i": i,
             "action_mask": available,
         }
+
+        # Add locs if available
+        if locs is not None:
+            td_reset_data["locs"] = locs
+
         # Add normalization metadata if applicable
         if self.normalize:
             td_reset_data.update(

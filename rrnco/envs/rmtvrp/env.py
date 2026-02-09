@@ -116,23 +116,23 @@ class RMTVRPEnv(RL4COEnvBase):
     ):
         super().__init__(check_solution=check_solution, **kwargs)
         if generator is None:
-            # generator_params가 이미 인스턴스화된 객체인지 확인
+            # Check if generator_params is already an instantiated object
             if isinstance(generator_params, (RMTVRPGenerator, LazyRMTVRPGenerator)):
                 generator = generator_params
             elif isinstance(generator_params, dict):
-                # 딕셔너리인 경우 _target_을 확인하여 적절한 생성기 선택
+                # If it's a dictionary, check _target_ to select the appropriate generator
                 if (
                     generator_params.get("_target_")
                     == "rrnco.envs.rmtvrp.generator_lazy.LazyRMTVRPGenerator"
                 ):
-                    # _target_ 키를 제거하고 LazyRMTVRPGenerator 사용
+                    # Remove _target_ key and use LazyRMTVRPGenerator
                     generator_params_copy = generator_params.copy()
                     generator_params_copy.pop("_target_", None)
                     generator = LazyRMTVRPGenerator(**generator_params_copy)
                 else:
                     generator = RMTVRPGenerator(**generator_params)
             else:
-                # 기본 생성기 사용
+                # Use default generator
                 generator = RMTVRPGenerator()
 
         if check_solution:
@@ -272,7 +272,7 @@ class RMTVRPEnv(RL4COEnvBase):
             min_distance = distance_matrix.amin(dim=(-2, -1), keepdim=True)
             max_distance = distance_matrix.amax(dim=(-2, -1), keepdim=True)
 
-            # # Normalize distance using min-max scaling
+            # Normalize distance using min-max scaling
             distance_matrix = (distance_matrix - min_distance) / (
                 max_distance - min_distance + 1e-6
             )

@@ -54,11 +54,12 @@ class RRNet(REINFORCE):
         no_aug_coords: bool = True,
         **kwargs,
     ):
-        # 환경 객체는 제외하고 환경 이름만 저장 (용량 절약 및 pickle 문제 방지)
-        # policy는 모델 파라미터가 포함되어 있으므로 반드시 포함되어야 함
+        # Exclude the environment object and save only the environment name
+        # (saves space and prevents pickle issues)
+        # Policy must be included as it contains model parameters
         self.save_hyperparameters(logger=False, ignore=["env"])
 
-        # 환경 이름은 별도로 저장하여 모델 로드 시 환경 재생성 가능하도록 함
+        # Save environment name separately to allow environment recreation during model loading
         self.env_name = env.name if hasattr(env, "name") else str(env)
 
         if policy is None:
@@ -98,6 +99,7 @@ class RRNet(REINFORCE):
         td = self.env.reset(batch)
         n_aug, n_start = self.num_augment, self.num_starts
         n_start = self.env.get_num_starts(td) if n_start is None else n_start
+        # log.info(f"DEBUG: phase={phase}, n_aug={n_aug}, n_start={n_start}, batch_size={td.batch_size}")
 
         # During training, we do not augment the data
         if phase == "train":
@@ -117,7 +119,13 @@ class RRNet(REINFORCE):
         if phase == "train":
             assert n_start > 1, "num_starts must be > 1 during training"
             log_likelihood = unbatchify(out["log_likelihood"], (n_aug, n_start))
-            self.calculate_loss(td, batch, out, norm_reward, log_likelihood)
+            if self.env.normalize:
+                self.calculate_loss(td, batch, out, norm_reward, log_likelihood)
+            else:
+                if self.env_name == "smtvrp":
+                    self.calculate_loss(td, batch, out, reward / 1440, log_likelihood)
+                else:
+                    self.calculate_loss(td, batch, out, reward, log_likelihood)
             max_reward, max_idxs = reward.max(dim=-1)
             out.update({"max_reward": max_reward})
         # Get multi-start (=POMO) rewards and best actions only during validation and test
