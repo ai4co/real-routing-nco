@@ -31,7 +31,7 @@ class MVMoEInitEmbedding(MTVRPInitEmbedding):
 
         # If MoE is provided, we re-initialize the projections with MoE
         if num_experts > 0:
-            print("MoE in init embedding initializing")
+            log.info("MoE in init embedding initializing")
             self.project_global_feats = MoE(
                 input_size=2,
                 output_size=embed_dim,
@@ -106,7 +106,7 @@ class MultiHeadAttentionLayerMoE(nn.Module):
         super(MultiHeadAttentionLayerMoE, self).__init__()
 
         if num_experts > 0:
-            print("MoE in MultiHeadAttentionLayer initializing")
+            log.info("MoE in MultiHeadAttentionLayer initializing")
             dense_net = MoE(
                 input_size=embed_dim,
                 output_size=embed_dim,

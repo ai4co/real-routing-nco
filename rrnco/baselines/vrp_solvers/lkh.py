@@ -1,11 +1,14 @@
 import lkh
 import numpy as np
 
+from rl4co.utils.pylogger import get_pylogger
 from tensordict import TensorDict
 from torch import Tensor
 
 from .constants import LKH_SCALING_FACTOR, ROUTEFINDER2LKH
 from .utils import scale
+
+log = get_pylogger(__name__)
 
 
 def solve(
@@ -36,7 +39,7 @@ def solve(
     tuple[Tensor, Tensor]
         A tuple consisting of the action and the cost, respectively.
     """
-    print("WARNING: DIFFERENT DISTANCE/DURATION MATRICES NOT IMPLEMENTED YET FOR LKH")
+    log.warning("Different distance/duration matrices not implemented yet for LKH")
 
     problem = instance2problem(instance, problem_type, LKH_SCALING_FACTOR)
     action, cost = _solve(problem, max_runtime, num_runs, solver_loc)

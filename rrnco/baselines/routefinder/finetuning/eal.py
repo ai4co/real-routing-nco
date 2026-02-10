@@ -2,12 +2,15 @@ from copy import deepcopy
 
 import torch
 
+from rl4co.utils.pylogger import get_pylogger
 from rrnco.baselines.routefinder.env_embeddings.mtvrp.context import (
     MTVRPContextEmbeddingFull,
 )
 from rrnco.baselines.routefinder.env_embeddings.mtvrp.init import MTVRPInitEmbeddingFull
 
 from .utils import freeze_backbone
+
+log = get_pylogger(__name__)
 
 
 def efficient_adapter_layers(
@@ -30,7 +33,7 @@ def efficient_adapter_layers(
         adapter_only: if True, only the new embeddings are trained, otherwise the whole model is trained.
     """
 
-    print("Using Efficient Adapter Layers (EAL)")
+    log.info("Using Efficient Adapter Layers (EAL)")
 
     policy = model.policy
     embed_dim = policy.decoder.context_embedding.embed_dim

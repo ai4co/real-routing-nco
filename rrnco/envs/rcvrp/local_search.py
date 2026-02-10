@@ -205,9 +205,6 @@ def perform_local_search(
     if is_feasible := improved_solution.is_feasible() or remaining_trials == 0:
         return improved_solution, is_feasible
 
-    # print("Warning: Infeasible solution found from local search.",
-    #       "This will slow down the search due to the repeated local search runs.")
-
     # If infeasible, run the local search again with a higher penalty
     return perform_local_search(
         ls_operator, solution, load_penalty * 10, remaining_trials=remaining_trials

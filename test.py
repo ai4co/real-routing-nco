@@ -5,6 +5,7 @@ import warnings
 
 import torch
 
+
 from rl4co.data.dataset import TensorDictDataset
 from rl4co.data.utils import load_npz_to_tensordict
 from rl4co.utils.ops import batchify, unbatchify
@@ -17,6 +18,10 @@ from rrnco.envs.rcvrp import RCVRPEnv
 from rrnco.envs.rmtvrp import RMTVRPEnv
 from rrnco.models import RRNet
 from rrnco.models.utils.transforms import StateAugmentation
+
+from rrnco.utils import patch_torchrl_specs
+
+patch_torchrl_specs()
 
 augment = StateAugmentation(augment_fn="dihedral8", no_aug_coords=False)
 
@@ -112,7 +117,7 @@ if __name__ == "__main__":
 
     # model = RRNet(env=RMTVRPEnv())
     model = RRNet.load_from_checkpoint(
-        checkpoint_path, map_location="cpu", strict=False, load_baseline=False
+        checkpoint_path, map_location="cpu", strict=False, load_baseline=False, weights_only=False
     )
     policy = model.policy.to(device).eval()  # Use mixed precision if supported
 

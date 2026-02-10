@@ -4,12 +4,15 @@ from typing import Optional
 import numpy as np
 
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+from rl4co.utils.pylogger import get_pylogger
 from tensordict import TensorDict
 from torch import Tensor
 
 import rrnco.baselines.vrp_solvers.pyvrp as pyvrp
 
 from .constants import ORTOOLS_SCALING_FACTOR
+
+log = get_pylogger(__name__)
 
 
 def solve(instance: TensorDict, max_runtime: float, **kwargs) -> tuple[Tensor, Tensor]:
@@ -34,7 +37,7 @@ def solve(instance: TensorDict, max_runtime: float, **kwargs) -> tuple[Tensor, T
     instance to an OR-Tools compatible format. Future versions should
     implement a direct conversion.
     """
-    print("WARNING: DIFFERENT DISTANCE/DURATION MATRICES NOT IMPLEMENTED YET FOR ORTOOLS")
+    log.warning("Different distance/duration matrices not implemented yet for OR-Tools")
 
     data = instance2data(instance)
     action, cost = _solve(data, max_runtime)
