@@ -123,6 +123,28 @@ You can also configure experiment settings using the file `config/experiment/rrn
 
 You can evaluate a trained model using the `test.py` script. Make sure to provide the correct dataset path via `--datasets` and model checkpoint via `--checkpoint`.
 
+Usage of `test.py`:
+
+```
+usage: test.py [-h] [--problem PROBLEM] [--datasets DATASETS] [--decode_type DECODE_TYPE] [--batch_size BATCH_SIZE] [--checkpoint CHECKPOINT] [--device DEVICE] [--no_aug] [--problem_size PROBLEM_SIZE]
+
+options:
+  -h, --help            show this help message and exit
+  --problem PROBLEM     Problem name: hcvrp, omdcpdp, etc.
+  --datasets DATASETS   Filename of the dataset(s) to evaluate. Defaults to all under data/{problem}/ dir
+  --decode_type DECODE_TYPE
+                        Decoding type. Available only: greedy
+  --batch_size BATCH_SIZE
+  --checkpoint CHECKPOINT
+  --device DEVICE
+  --no_aug              Disable data augmentation
+  --problem_size PROBLEM_SIZE
+```
+
+- Supported problems: atsp, rcvrp, rcvrptw
+- Checkpoints: `checkpoints/{problem}/epoch_199.ckpt`
+- Datasets: `data/{problem}/{problem}_n100_seed3333_{distribution_type}.npz` (distribution_type: `in_distribution`, `out_of_distribution`, `in_distribution_cluster` , which correspond to the ones used in the paper)
+
 Examples for different tasks:
 
 **ATSP**
@@ -155,5 +177,4 @@ If you find RRNCO valuable for your research or applied projects:
   year      = {2026},
   url       = {https://openreview.net/forum?id=sKvo9ZZfpe}
 }
-
 ```
