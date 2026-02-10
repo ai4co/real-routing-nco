@@ -50,7 +50,7 @@ class PointerAttentionMoE(PointerAttention):
         self.temperature = temperature
 
         if num_experts > 0:
-            print("Using MoE with {} experts in decoder".format(num_experts))
+            log.info("Using MoE with {} experts in decoder".format(num_experts))
 
             self.project_out = MoE(
                 input_size=embed_dim,
@@ -64,7 +64,7 @@ class PointerAttentionMoE(PointerAttention):
                 moe_model="Linear",
             )
             if self.hierarchical_gating:
-                print("Hierarchical gating in PointerAttentionMoE initializing")
+                log.info("Hierarchical gating in PointerAttentionMoE initializing")
                 self.dense_or_moe = nn.Linear(embed_dim, 2, bias=False)
                 self.project_out_dense = nn.Linear(embed_dim, embed_dim, bias=out_bias)
 

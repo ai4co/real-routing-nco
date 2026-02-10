@@ -1,11 +1,14 @@
 import torch.nn as nn
 
+from rl4co.utils.pylogger import get_pylogger
 from rrnco.baselines.routefinder.env_embeddings.mtvrp.context import (
     MTVRPContextEmbeddingFull,
 )
 from rrnco.baselines.routefinder.env_embeddings.mtvrp.init import MTVRPInitEmbeddingFull
 
 from .utils import freeze_backbone
+
+log = get_pylogger(__name__)
 
 
 def model_from_scratch(
@@ -15,7 +18,7 @@ def model_from_scratch(
 ):
     """Reinitializes from scratch with new model and new embeddings"""
 
-    print("Reinitializing full model from scratch")
+    log.info("Reinitializing full model from scratch")
     embed_dim = model.policy.encoder.init_embedding.embed_dim
 
     def reset_weights(m):
@@ -42,7 +45,7 @@ def adapter_layers(
     """Adapter Layers (AL) from Lin et al., 2024.
     Only initializes new adapter layers (embeddings), but keeps the model parameters the same.
     """
-    print("Using Adapter Layers (AL)")
+    log.info("Using Adapter Layers (AL)")
 
     embed_dim = model.policy.encoder.init_embedding.embed_dim
     policy = model.policy

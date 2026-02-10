@@ -148,13 +148,3 @@ class Real_World_Sampler:
                 replace=False,
             )
         return indices
-
-
-# if __name__ == '__main__':
-#     sampler = Real_World_RCVRP_Sampler(city="daejeon")
-#     sampled_data = sampler.sample(batch=2, num_sample=5)
-#     print(sampled_data.keys())
-#     print(sampled_data['points'].shape)
-#     print(sampled_data['distance'].shape)
-#     print(sampled_data["distance"])
-#     print(sampled_data["points"])

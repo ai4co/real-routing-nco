@@ -380,7 +380,6 @@ class MoE(nn.Module):
         selected_logits = top_logits[..., : self.k].squeeze(0)  # [1, k] -> [k]
         selected_indices = top_indices[..., : self.k].squeeze(0)
         selected_gates = self.softmax(selected_logits / self.T)
-        # print(selected_indices)
 
         return selected_indices, selected_gates
 
