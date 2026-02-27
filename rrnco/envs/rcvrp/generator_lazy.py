@@ -280,11 +280,14 @@ class LazyRCVRPGenerator(Generator):
         depot = torch.from_numpy(points[:, :1, :]).float()  # First point is depot
         locs = torch.from_numpy(points[:, 1:, :]).float()  # Rest are customer locations
 
+        # Use actual batch size from the data
+        actual_batch_size = [points.shape[0]]
+
         # Generate demand
-        demand = self.demand_sampler.sample((*batch_size, self.num_loc))
+        demand = self.demand_sampler.sample((*actual_batch_size, self.num_loc))
 
         # Generate capacity
-        capacity = torch.full((*batch_size, 1), self.capacity, dtype=torch.float32)
+        capacity = torch.full((*actual_batch_size, 1), self.capacity, dtype=torch.float32)
 
         # Add distance matrix if available
         td_data = {
@@ -298,7 +301,7 @@ class LazyRCVRPGenerator(Generator):
             distance = torch.from_numpy(chunk_data["distance_matrix"].astype(np.float32))
             td_data["distance_matrix"] = distance
 
-        return TensorDict(td_data, batch_size=batch_size)
+        return TensorDict(td_data, batch_size=actual_batch_size)
 
     def _merge_tensordicts(self, tds: list) -> TensorDict:
         """Efficiently merge multiple TensorDicts"""

@@ -248,12 +248,15 @@ class LazyATSPGenerator(Generator):
         locs = (points - points_min) / (points_max - points_min + 1e-6)
         locs = torch.from_numpy(locs)
 
+        # Use actual batch size from the data
+        actual_batch_size = [distance.shape[0]]
+
         return TensorDict(
             {
                 "locs": locs,
                 "distance_matrix": distance,
             },
-            batch_size=batch_size,
+            batch_size=actual_batch_size,
         )
 
     def _merge_tensordicts(self, tds: list) -> TensorDict:

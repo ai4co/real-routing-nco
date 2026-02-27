@@ -353,6 +353,9 @@ class LazyRMTVRPGenerator(Generator):
         distance = torch.from_numpy(chunk_data["distance_matrix"].astype(np.float32))
         duration = chunk_data["duration_matrix"].astype(np.float32)
 
+        # Use actual batch size from the data
+        actual_batch_size = [points.shape[0]]
+
         # Normalize locations
         points_min = np.min(points, axis=1, keepdims=True)
         points_max = np.max(points, axis=1, keepdims=True)
@@ -368,25 +371,25 @@ class LazyRMTVRPGenerator(Generator):
 
         # Generate all MTVRP components
         vehicle_capacity = torch.full(
-            (*batch_size, 1), self.capacity, dtype=torch.float32
+            (*actual_batch_size, 1), self.capacity, dtype=torch.float32
         )
         capacity_original = vehicle_capacity.clone()
 
         # Generate demands
         demand_linehaul, demand_backhaul = self.generate_demands(
-            batch_size=batch_size, num_loc=self.num_loc
+            batch_size=actual_batch_size, num_loc=self.num_loc
         )
 
         # Generate other components
         backhaul_class = self.generate_backhaul_class(
-            shape=(*batch_size, 1), sample=self.sample_backhaul_class
+            shape=(*actual_batch_size, 1), sample=self.sample_backhaul_class
         )
-        speed = self.generate_speed(shape=(*batch_size, 1))
+        speed = self.generate_speed(shape=(*actual_batch_size, 1))
         time_windows, service_time = self.generate_time_windows_with_duration_matrix(
             duration=normalized_duration
         )
-        open_route = self.generate_open_route(shape=(*batch_size, 1))
-        distance_limit = self.generate_distance_limit(shape=(*batch_size, 1), locs=locs)
+        open_route = self.generate_open_route(shape=(*actual_batch_size, 1))
+        distance_limit = self.generate_distance_limit(shape=(*actual_batch_size, 1), locs=locs)
 
         # Scale demands if needed
         if self.scale_demand:
@@ -410,7 +413,7 @@ class LazyRMTVRPGenerator(Generator):
                 "distance_matrix": distance,
                 "duration_matrix": normalized_duration,
             },
-            batch_size=batch_size,
+            batch_size=actual_batch_size,
         )
 
         return td
