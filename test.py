@@ -4,6 +4,8 @@ import time
 import warnings
 
 import torch
+import numpy as np
+import random
 
 
 from rl4co.data.dataset import TensorDictDataset
@@ -40,6 +42,22 @@ except AttributeError:
 torch.set_float32_matmul_precision("medium")
 
 
+def set_seed(seed=1234):
+    """Set random seeds for reproducibility"""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # for multi-GPU
+
+    # Make CUDA operations deterministic
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    # For PyTorch >= 1.12, ensure deterministic algorithms
+    torch.use_deterministic_algorithms(True, warn_only=True)
+
+
 def get_dataloader(td, batch_size=4):
     """Get a dataloader from a TensorDictDataset"""
     # Set up the dataloader
@@ -74,11 +92,15 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--no_aug", action="store_true", help="Disable data augmentation")
     parser.add_argument("--problem_size", type=int, default=100)
+    parser.add_argument("--seed", type=int, default=1234, help="Random seed for reproducibility")
     # Use load_from_checkpoint with map_location, which is handled internally by Lightning
     # Suppress FutureWarnings related to torch.load and weights_only
     warnings.filterwarnings("ignore", message=".*weights_only.*", category=FutureWarning)
 
     opts = parser.parse_args()
+
+    # Set seed for reproducibility
+    set_seed(opts.seed)
     generator_params = {"num_loc": opts.problem_size}
     batch_size = opts.batch_size
     decode_type = opts.decode_type
